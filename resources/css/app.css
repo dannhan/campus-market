@@ -18,3 +18,8 @@
         display: none;
     }
 }
+
+.turbo-progress-bar {
+    height: 3px;
+    background-color: #0d9488;
+}
