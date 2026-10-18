@@ -43,7 +43,7 @@
         </div>
 
         <!-- Registration Form -->
-        <form method="POST" action="{{ route('register') }}" class="space-y-3.5" x-data="{ showPass: false, showConfirm: false }">
+        <form method="POST" action="{{ route('register') }}" data-turbo="false" class="space-y-3.5" x-data="{ showPass: false, showConfirm: false }">
             @csrf
 
             <!-- Nama Lengkap -->

@@ -68,7 +68,7 @@
             <a href="{{ route('profile') }}" class="w-full block text-center py-3.5 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition duration-150">
                 Buka Profil Saya
             </a>
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('logout') }}" data-turbo="false">
                 @csrf
                 <button type="submit" class="w-full text-center py-3.5 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition duration-150">
                     Keluar

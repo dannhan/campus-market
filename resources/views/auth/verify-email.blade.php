@@ -67,7 +67,7 @@
 
     <!-- Logout Action -->
     <div class="pt-6 border-t border-slate-100 mt-6">
-        <form method="POST" action="{{ route('logout') }}">
+        <form method="POST" action="{{ route('logout') }}" data-turbo="false">
             @csrf
             <button type="submit" class="text-xs text-slate-500 hover:text-slate-800 font-medium">
                 Keluar / Gunakan Akun Lain

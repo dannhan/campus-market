@@ -167,7 +167,7 @@
                 <span class="font-bold text-slate-800">{{ $user->created_at->translatedFormat('F Y') }}</span>
             </div>
 
-            <form method="POST" action="{{ route('logout') }}" class="pt-2 border-t border-slate-100">
+            <form method="POST" action="{{ route('logout') }}" data-turbo="false" class="pt-2 border-t border-slate-100">
                 @csrf
                 <button
                     type="submit"

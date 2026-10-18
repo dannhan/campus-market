@@ -23,7 +23,7 @@
         </div>
 
         <!-- Login Form -->
-        <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ showPassword: false }">
+        <form method="POST" action="{{ route('login') }}" data-turbo="false" class="space-y-4" x-data="{ showPassword: false }">
             @csrf
 
             <!-- Email Universitas -->
