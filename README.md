@@ -6,7 +6,7 @@ CampusMarket adalah platform marketplace yang dirancang khusus untuk civitas aka
 
 ---
 
-## 1. Lingkup Pengembangan: Sprint 1
+## 1. Lingkup Pengembangan: Sprint 1 & Sprint 2
 
 Pada **Sprint 1**, fokus implementasi adalah meletakkan fondasi arsitektur aplikasi, autentikasi aman, verifikasi kemahasiswaan otomatis, dan manajemen profil mahasiswa:
 
@@ -15,7 +15,16 @@ Pada **Sprint 1**, fokus implementasi adalah meletakkan fondasi arsitektur aplik
 - **SRS-003**: Pengguna dapat login/logout dengan opsi "Remember Me" untuk kemudahan akses.
 - **SRS-004**: Profil mahasiswa menampilkan nama, universitas, jurusan, NIM, email, badge verifikasi, rating penjual/pembeli, dan edit profil terbatas.
 
-*Fitur di luar Sprint 1 (katalog produk, tawar-menawar, keranjang, checkout, escrow payment, pengiriman, chat, dan review transaksi) ditangguhkan ke Sprint 2 dan seterusnya.*
+Pada **Sprint 2**, aplikasi berkembang menjadi marketplace yang fungsional untuk etalase barang dan negosiasi harga:
+
+- **SRS-005**: Pencarian produk berdasarkan nama/deskripsi, kategori, universitas penjual, dan kisaran harga.
+- **SRS-006**: Filter berdasarkan kondisi barang (baru/seperti baru/bekas) dan jenis transaksi (jual/sewa).
+- **SRS-007**: Halaman detail produk dengan galeri foto, deskripsi, harga, kondisi, lokasi penjual, dan profil penjual.
+- **SRS-008**: Mahasiswa menambahkan produk untuk dijual dengan upload hingga 5 foto dan deskripsi lengkap, termasuk edit dan hapus listing milik sendiri.
+- **SRS-009**: Kategori khusus seperti "Buku per Semester", "Perlengkapan Lab", "Gadget Second", dan "Jasa Mahasiswa".
+- **SRS-010**: Tawar-menawar (bargaining) antara pembeli dan penjual: ajukan tawaran, tolak, tawaran balasan (counter), terima, dan batalkan; penawaran yang diterima menandai produk terjual.
+
+*Fitur di luar Sprint 2 (keranjang, checkout, escrow payment, pengiriman, chat, review transaksi, dan dashboard admin) ditangguhkan ke Sprint 3 dan seterusnya.*
 
 ---
 
@@ -102,7 +111,7 @@ Akses aplikasi melalui peramban: `http://localhost:8000`
 
 ## 5. Menjalankan Pengujian Otomatis (Automated Tests)
 
-Semua kebutuhan Sprint 1 diuji secara menyeluruh menggunakan PHPUnit:
+Semua kebutuhan Sprint 1 dan Sprint 2 diuji secara menyeluruh menggunakan PHPUnit:
 ```bash
 php artisan test
 ```
@@ -112,12 +121,15 @@ Untuk melihat laporan pengujian detail per skenario:
 php artisan test --testdox
 ```
 
-Cakupan pengujian (37 skenario lulus, 106 asersi):
+Cakupan pengujian (73 skenario lulus, 244 asersi):
 - **Registrasi**: Validasi domain universitas, pencocokan data NIM pangkalan, penolakan format email tidak valid, deteksi duplikasi email, konfirmasi password, kewajiban menyetujui ketentuan.
 - **Verifikasi Email**: Pengiriman event verifikasi, validasi signature URL hash, proteksi rute middleware `verified`, pencegahan verifikasi ganda, kirim ulang tautan.
 - **Autentikasi**: Login berhasil, penolakan kredensial salah, pengaktifan sesi "Remember Me", proteksi pengunjung anonim, logout dan regenerasi sesi/CSRF.
 - **Profil**: Tampilan data mahasiswa lengkap, pengalihan pengguna belum verifikasi, edit nama tampilan dan upload avatar, proteksi data identitas akademik agar tidak dapat diubah sembarangan, isolasi otorisasi akun.
 - **StudentVerificationService**: Unit testing lengkap pencocokan NIM, domain, toleransi nama, dan pangkalan universitas lain.
+- **Manajemen Produk**: Publikasi listing dengan foto (maks. 5), validasi harga/kondisi/kategori, edit dan hapus listing oleh pemilik, penolakan akses non-pemilik, penghapusan berkas foto fisik.
+- **Etalase & Pencarian**: Penjelajahan produk aktif, pencarian nama/deskripsi, filter kategori, universitas penjual, kondisi, jenis transaksi, rentang harga, pengurutan harga, dan pengabaian nilai filter tidak valid.
+- **Tawar-Menawar**: Pengajuan penawaran, larangan menawar produk sendiri, larangan penawaran ganda yang menunggu respons, terima (produk menjadi terjual dan penawaran bersaing ditolak), tolak, tawaran balasan bertingkat (counter thread), pembatalan oleh pemberi tawaran, dan proteksi respons pihak luar.
 
 ---
 
@@ -179,8 +191,9 @@ Driver mail bawaan diatur ke `MAIL_MAILER=log`. Setiap kali registrasi atau perm
 
 ---
 
-## 9. Batasan & Rencana Sprint 2 (Known Limitations)
+## 9. Batasan & Rencana Sprint 3 (Known Limitations)
 
-- Fitur marketplace seperti etalase produk, katalog pencarian, tawar-menawar, chat, dan pembayaran escrow belum diaktifkan pada Sprint 1.
-- Rating penjual dan pembeli pada profil diset pada status awal `"Belum ada rating"` dan akan terintegrasi saat transaksi tuntas diimplementasikan pada sprint berikutnya.
+- Fitur marketplace inti (etalase, pencarian, listing, tawar-menawar) telah aktif pada Sprint 2; keranjang, checkout, escrow payment, pengiriman, dan chat belum diimplementasikan.
+- Rating penjual dan pembeli pada profil diset pada status awal `"Belum ada rating"` dan akan terintegrasi saat review transaksi diimplementasikan pada sprint berikutnya.
 - Penggantian data identitas akademik inti (NIM, universitas, jurusan, email resmi) dikunci demi integritas verifikasi.
+- Negosiasi tawar-menawar bersifat thread harga sederhana; chat bebas dan notifikasi push menyusul pada sprint berikutnya (SRS-016, SRS-022).
