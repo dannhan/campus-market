@@ -62,7 +62,10 @@
     <!-- Action Buttons -->
     <div class="space-y-3 pb-4">
         @auth
-            <a href="{{ route('profile') }}" class="w-full block text-center py-3.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-md shadow-teal-600/20 transition duration-150">
+            <a href="{{ route('products.index') }}" class="w-full block text-center py-3.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-md shadow-teal-600/20 transition duration-150">
+                Lihat Etalase Produk
+            </a>
+            <a href="{{ route('profile') }}" class="w-full block text-center py-3.5 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition duration-150">
                 Buka Profil Saya
             </a>
             <form method="POST" action="{{ route('logout') }}">

@@ -94,6 +94,7 @@
                         type="checkbox"
                         name="remember"
                         id="remember"
+                        value="1"
                         {{ old('remember') ? 'checked' : '' }}
                         class="w-4 h-4 rounded text-teal-600 border-slate-300 focus:ring-teal-500"
                     >
