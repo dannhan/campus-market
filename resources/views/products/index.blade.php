@@ -73,25 +73,16 @@
             'cpu' => 'Elektronik',
             'cake' => 'Makanan',
         ];
-        $hasCategoryFilter = filled($filters['category'] ?? null);
     @endphp
 
     <div class="grid grid-cols-4 gap-x-2 gap-y-4 mb-5">
-        <a href="{{ route('products.index', array_diff_key($filters, ['category' => 1])) }}"
-           class="flex flex-col items-center gap-1.5 min-w-0"
-           title="Semua produk"
-           @if (! $hasCategoryFilter) aria-current="page" @endif>
-            <span class="w-14 h-14 rounded-full border flex items-center justify-center transition {{ ! $hasCategoryFilter ? 'bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-600/25' : 'bg-white border-slate-200 text-teal-600 hover:border-teal-300 hover:text-teal-700' }}">
-                <x-category-icon name="squares" class="w-6 h-6" />
-            </span>
-            <span class="text-[10px] leading-tight text-center truncate w-full {{ ! $hasCategoryFilter ? 'font-semibold text-teal-700' : 'font-medium text-slate-500' }}">Semua</span>
-        </a>
-
-        @foreach ($categories as $category)
+        @foreach ($categories->take(8) as $category)
             @php($isActiveCategory = ($filters['category'] ?? '') === $category->slug)
-            <a href="{{ route('products.index', array_merge($filters, ['category' => $category->slug])) }}"
+            <a href="{{ $isActiveCategory
+                    ? route('products.index', array_diff_key($filters, ['category' => 1]))
+                    : route('products.index', array_merge($filters, ['category' => $category->slug])) }}"
                class="flex flex-col items-center gap-1.5 min-w-0"
-               title="{{ $category->name }}"
+               title="{{ $isActiveCategory ? 'Tampilkan semua kategori' : $category->name }}"
                @if ($isActiveCategory) aria-current="page" @endif>
                 <span class="w-14 h-14 rounded-full border flex items-center justify-center transition {{ $isActiveCategory ? 'bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-600/25' : 'bg-white border-slate-200 text-teal-600 hover:border-teal-300 hover:text-teal-700' }}">
                     <x-category-icon :name="$category->icon" class="w-6 h-6" />
