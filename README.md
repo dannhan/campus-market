@@ -32,6 +32,7 @@ Pada **Sprint 2**, aplikasi berkembang menjadi marketplace yang fungsional untuk
 
 - **PHP**: ^8.2 (Direkomendasikan PHP 8.4)
 - **Ekstensi PHP**: `pdo_sqlite`, `sqlite3`, `curl`, `dom`, `fileinfo`, `mbstring`, `openssl`, `xml`, `zip`
+- **Ekstensi PHP opsional**: `gd` (membuat foto placeholder pada `php artisan demo:seed` dan menjalankan pengujian unggah gambar)
 - **Composer**: ^2.2+
 - **Node.js**: ^18.x / ^20.x / ^22.x
 - **NPM**: ^9.x / ^10.x
@@ -176,6 +177,45 @@ Seeder menyediakan data siap pakai untuk pengujian:
 - **UGM**: NIM `22/498765/TK/54321`, Nama `Dewi Lestari`, Jurusan `Teknik Industri`, Email `dewi.lestari@mail.ugm.ac.id`
 - **ITB**: NIM `13522001`, Nama `Reza Firmansyah`, Jurusan `Teknik Informatika`, Email `reza.firmansyah@mahasiswa.itb.ac.id`
 - **UI**: NIM `2206812345`, Nama `Nadia Putri`, Jurusan `Ilmu Komputer`, Email `nadia.putri@ui.ac.id`
+
+### Data Demo Marketplace (Seeder)
+
+Untuk mengisi etalase dengan data contoh yang lebih ramai (akun penjual, listing produk, dan foto placeholder):
+
+```bash
+php artisan demo:seed
+```
+
+Perintah tersebut membuat:
+
+- **8 akun demo terverifikasi** (password `Password123!`) dengan email berawalan `demo.` dan NIM pada rentang `9900000001`–`9900000008`.
+- **24 produk** yang tersebar di seluruh kategori, dengan campuran status jual/sewa, kondisi barang, serta status `active`/`sold`/`withdrawn`.
+- **48 foto placeholder** hasil generate GD di `storage/app/public/products/demo/` (1–3 foto per produk).
+
+| Email | Nama | Universitas | NIM |
+|---|---|---|---|
+| `demo.raka@students.undip.ac.id` | Raka Pratama | Universitas Diponegoro | `9900000001` |
+| `demo.maya@students.undip.ac.id` | Maya Kusuma | Universitas Diponegoro | `9900000002` |
+| `demo.bagas@mail.ugm.ac.id` | Bagas Saputra | Universitas Gadjah Mada | `9900000003` |
+| `demo.tari@mail.ugm.ac.id` | Tari Wulandari | Universitas Gadjah Mada | `9900000004` |
+| `demo.yoga@mahasiswa.itb.ac.id` | Yoga Ramadhan | Institut Teknologi Bandung | `9900000005` |
+| `demo.sinta@mahasiswa.itb.ac.id` | Sinta Maharani | Institut Teknologi Bandung | `9900000006` |
+| `demo.aldi@ui.ac.id` | Aldi Firmansyah | Universitas Indonesia | `9900000007` |
+| `demo.putri@ui.ac.id` | Putri Anjani | Universitas Indonesia | `9900000008` |
+
+Seeder ini **tidak** dipanggil oleh `php artisan migrate --seed`, sehingga data demo tidak masuk ke database produksi. Perintah aman dijalankan berulang kali (idempotent): data diperbarui berdasarkan email/NIM/slug, dan foto tidak diduplikasi.
+
+Untuk menghapus seluruh data demo beserta file fotonya:
+
+```bash
+# Lihat ringkasan data yang akan dihapus tanpa mengubah apa pun
+php artisan demo:clean --dry-run
+
+# Hapus akun demo, mahasiswa demo, produk, foto, dan avatar demo
+php artisan demo:clean
+```
+
+Cleanup hanya menyasar data dengan email berawalan `demo.`; universitas, kategori, akun pengguna asli, dan produk non-demo tidak tersentuh. Pastikan `php artisan storage:link` sudah dijalankan agar foto demo tampil di peramban.
 
 ---
 
