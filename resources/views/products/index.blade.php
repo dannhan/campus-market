@@ -61,16 +61,42 @@
         </div>
     </form>
 
-    <!-- Category Chips (SRS-009) -->
-    <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 mb-4">
+    <!-- Category Grid (SRS-009) -->
+    @php
+        $categoryShortLabels = [
+            'book-open' => 'Buku',
+            'beaker' => 'Lab',
+            'device-phone' => 'Gadget',
+            'briefcase' => 'Jasa',
+            'pencil' => 'Alat Tulis',
+            'shirt' => 'Pakaian',
+            'cpu' => 'Elektronik',
+            'cake' => 'Makanan',
+        ];
+        $hasCategoryFilter = filled($filters['category'] ?? null);
+    @endphp
+
+    <div class="grid grid-cols-4 gap-x-2 gap-y-4 mb-5">
         <a href="{{ route('products.index', array_diff_key($filters, ['category' => 1])) }}"
-           class="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition {{ blank($filters['category'] ?? null) ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-teal-400' }}">
-            Semua
+           class="flex flex-col items-center gap-1.5 min-w-0"
+           title="Semua produk"
+           @if (! $hasCategoryFilter) aria-current="page" @endif>
+            <span class="w-14 h-14 rounded-full border flex items-center justify-center transition {{ ! $hasCategoryFilter ? 'bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-600/25' : 'bg-white border-slate-200 text-teal-600 hover:border-teal-300 hover:text-teal-700' }}">
+                <x-category-icon name="squares" class="w-6 h-6" />
+            </span>
+            <span class="text-[10px] leading-tight text-center truncate w-full {{ ! $hasCategoryFilter ? 'font-semibold text-teal-700' : 'font-medium text-slate-500' }}">Semua</span>
         </a>
+
         @foreach ($categories as $category)
+            @php($isActiveCategory = ($filters['category'] ?? '') === $category->slug)
             <a href="{{ route('products.index', array_merge($filters, ['category' => $category->slug])) }}"
-               class="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition {{ ($filters['category'] ?? '') === $category->slug ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-teal-400' }}">
-                {{ $category->name }}
+               class="flex flex-col items-center gap-1.5 min-w-0"
+               title="{{ $category->name }}"
+               @if ($isActiveCategory) aria-current="page" @endif>
+                <span class="w-14 h-14 rounded-full border flex items-center justify-center transition {{ $isActiveCategory ? 'bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-600/25' : 'bg-white border-slate-200 text-teal-600 hover:border-teal-300 hover:text-teal-700' }}">
+                    <x-category-icon :name="$category->icon" class="w-6 h-6" />
+                </span>
+                <span class="text-[10px] leading-tight text-center truncate w-full {{ $isActiveCategory ? 'font-semibold text-teal-700' : 'font-medium text-slate-500' }}">{{ $categoryShortLabels[$category->icon] ?? $category->name }}</span>
             </a>
         @endforeach
     </div>
