@@ -15,7 +15,9 @@ class ProfileTest extends TestCase
     use RefreshDatabase;
 
     protected University $university;
+
     protected Student $student;
+
     protected User $user;
 
     protected function setUp(): void
@@ -101,6 +103,15 @@ class ProfileTest extends TestCase
         $response->assertSee('24060122130001');
     }
 
+    public function test_profile_edit_form_submits_avatar_natively_without_turbo(): void
+    {
+        $response = $this->actingAs($this->user)->get('/profile/edit');
+
+        $response->assertOk();
+        $response->assertSee('enctype="multipart/form-data"', false);
+        $response->assertSee('data-turbo="false"', false);
+    }
+
     public function test_user_can_update_allowed_fields_name_and_avatar(): void
     {
         Storage::fake('public');
@@ -119,6 +130,17 @@ class ProfileTest extends TestCase
         $this->assertEquals('Budi Santoso S.Kom', $this->user->name);
         $this->assertNotNull($this->user->avatar);
         Storage::disk('public')->assertExists($this->user->avatar);
+    }
+
+    public function test_avatar_larger_than_two_megabytes_is_rejected(): void
+    {
+        $response = $this->actingAs($this->user)->patch('/profile', [
+            'name' => 'Budi Santoso',
+            'avatar' => UploadedFile::fake()->image('avatar-besar.jpg')->size(3072),
+        ]);
+
+        $response->assertSessionHasErrors('avatar');
+        $this->assertNull($this->user->fresh()->avatar);
     }
 
     public function test_protected_identity_fields_cannot_be_arbitrarily_changed(): void

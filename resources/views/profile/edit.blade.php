@@ -19,7 +19,35 @@
             action="{{ route('profile.update') }}"
             enctype="multipart/form-data"
             class="space-y-5"
-            x-data="{ avatarPreview: '{{ $user->avatar_url }}' }"
+            data-turbo="false"
+            x-data="{
+                avatarPreview: @js($user->avatar_url),
+                avatarError: '',
+                handleAvatar(event) {
+                    const file = event.target.files[0];
+                    this.avatarError = '';
+
+                    if (! file) {
+                        return;
+                    }
+
+                    if (! ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                        this.avatarError = 'Format avatar yang didukung: JPG, PNG, WEBP.';
+                        return;
+                    }
+
+                    if (file.size > 2 * 1024 * 1024) {
+                        this.avatarError = 'Ukuran avatar maksimal 2MB.';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (loadEvent) => {
+                        this.avatarPreview = loadEvent.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                },
+            }"
         >
             @csrf
             @method('PATCH')
@@ -48,18 +76,12 @@
                         name="avatar"
                         accept="image/png, image/jpeg, image/jpg, image/webp"
                         class="hidden"
-                        @change="
-                            const file = $event.target.files[0];
-                            if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (e) => avatarPreview = e.target.result;
-                                reader.readAsDataURL(file);
-                            }
-                        "
+                        @change="handleAvatar($event)"
                     >
                 </div>
                 <div class="text-xs font-semibold text-slate-700">Foto Profil</div>
                 <div class="text-[10px] text-slate-400 mt-0.5">Format JPG, PNG, WEBP (maksimal 2MB)</div>
+                <p x-show="avatarError" x-cloak x-text="avatarError" class="text-[11px] text-rose-600 mt-1 font-medium"></p>
                 @error('avatar')
                     <p class="text-[11px] text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -155,7 +177,8 @@
             <div class="space-y-2 pt-2">
                 <button
                     type="submit"
-                    class="w-full py-3.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-md shadow-teal-600/20 transition duration-150"
+                    :disabled="avatarError !== ''"
+                    class="w-full py-3.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-md shadow-teal-600/20 transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     Simpan Perubahan
                 </button>

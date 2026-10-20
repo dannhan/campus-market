@@ -108,6 +108,8 @@ php artisan serve
 ```
 Akses aplikasi melalui peramban: `http://localhost:8000`
 
+> **Catatan upload:** perintah `php artisan serve` pada proyek ini menjalankan PHP dengan `upload_max_filesize=8M` dan `post_max_size=40M`, sehingga foto produk hingga 5MB dan avatar hingga 2MB dapat diunggah tanpa error 413. Jika aplikasi dijalankan melalui Apache/Nginx/FPM, samakan batas tersebut pada konfigurasi PHP.
+
 ---
 
 ## 5. Menjalankan Pengujian Otomatis (Automated Tests)
@@ -122,7 +124,7 @@ Untuk melihat laporan pengujian detail per skenario:
 php artisan test --testdox
 ```
 
-Cakupan pengujian (73 skenario lulus, 244 asersi):
+Cakupan pengujian (83 skenario lulus, 349 asersi):
 - **Registrasi**: Validasi domain universitas, pencocokan data NIM pangkalan, penolakan format email tidak valid, deteksi duplikasi email, konfirmasi password, kewajiban menyetujui ketentuan.
 - **Verifikasi Email**: Pengiriman event verifikasi, validasi signature URL hash, proteksi rute middleware `verified`, pencegahan verifikasi ganda, kirim ulang tautan.
 - **Autentikasi**: Login berhasil, penolakan kredensial salah, pengaktifan sesi "Remember Me", proteksi pengunjung anonim, logout dan regenerasi sesi/CSRF.

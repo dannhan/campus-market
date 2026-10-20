@@ -17,7 +17,9 @@ class ProductManagementTest extends TestCase
     use RefreshDatabase;
 
     protected University $university;
+
     protected User $seller;
+
     protected Category $category;
 
     protected function setUp(): void
@@ -72,6 +74,15 @@ class ProductManagementTest extends TestCase
         $this->get('/products/create')->assertRedirect('/login');
     }
 
+    public function test_product_form_submits_photos_natively_without_turbo(): void
+    {
+        $response = $this->actingAs($this->seller)->get('/products/create');
+
+        $response->assertOk();
+        $response->assertSee('enctype="multipart/form-data"', false);
+        $response->assertSee('data-turbo="false"', false);
+    }
+
     public function test_verified_user_can_publish_product_with_photos(): void
     {
         Storage::fake('public');
@@ -116,6 +127,18 @@ class ProductManagementTest extends TestCase
         $response = $this->actingAs($this->seller)->post('/products', $this->validPayload(['images' => $images]));
 
         $response->assertSessionHasErrors('images');
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_product_creation_rejects_images_larger_than_five_megabytes(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->actingAs($this->seller)->post('/products', $this->validPayload([
+            'images' => [UploadedFile::fake()->image('foto-besar.jpg')->size(6144)],
+        ]));
+
+        $response->assertSessionHasErrors('images.0');
         $this->assertSame(0, Product::count());
     }
 

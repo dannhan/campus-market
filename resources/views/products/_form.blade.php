@@ -1,6 +1,44 @@
 @php($isEdit = isset($product) && $product->exists)
 
-<form method="POST" action="{{ $isEdit ? route('products.update', $product) : route('products.store') }}" enctype="multipart/form-data" class="space-y-4">
+<form
+    method="POST"
+    action="{{ $isEdit ? route('products.update', $product) : route('products.store') }}"
+    enctype="multipart/form-data"
+    class="space-y-4"
+    data-turbo="false"
+    x-data="{
+        imageError: '',
+        imageFiles: [],
+        handleImages(event) {
+            this.imageFiles = Array.from(event.target.files);
+            this.imageError = '';
+
+            if (this.imageFiles.length > 5) {
+                this.imageError = 'Maksimal 5 foto produk.';
+                return;
+            }
+
+            for (const file of this.imageFiles) {
+                if (! ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                    this.imageError = 'Format foto yang didukung: JPG, PNG, WEBP.';
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    this.imageError = 'Ukuran setiap foto maksimal 5MB.';
+                    return;
+                }
+            }
+        },
+        fileSize(bytes) {
+            if (bytes < 1024 * 1024) {
+                return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+            }
+
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        },
+    }"
+>
     @csrf
     @if ($isEdit)
         @method('PUT')
@@ -12,8 +50,17 @@
         <label class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-dashed border-slate-200 rounded-xl text-xs text-slate-500 cursor-pointer hover:border-teal-400 hover:text-teal-600 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             Pilih foto dari perangkat
-            <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden">
+            <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden" @change="handleImages($event)">
         </label>
+        <div x-show="imageFiles.length" x-cloak class="mt-1.5 space-y-0.5">
+            <template x-for="file in imageFiles" :key="file.name + '-' + file.size">
+                <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500">
+                    <span class="truncate" x-text="file.name"></span>
+                    <span class="shrink-0" x-text="fileSize(file.size)"></span>
+                </div>
+            </template>
+        </div>
+        <p x-show="imageError" x-cloak x-text="imageError" class="text-[11px] text-rose-500 mt-1"></p>
         @if ($isEdit && $product->images->isNotEmpty())
             <p class="text-[11px] text-slate-400 mt-1">Foto lama akan diganti bila Anda mengunggah foto baru.</p>
         @endif
@@ -102,7 +149,7 @@
         <span class="text-xs text-slate-700 font-medium">Izinkan pembeli menawar harga (tawar-menawar)</span>
     </label>
 
-    <button type="submit" class="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-teal-600/20 transition">
+    <button type="submit" :disabled="imageError !== ''" class="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-teal-600/20 transition disabled:opacity-60 disabled:cursor-not-allowed">
         {{ $isEdit ? 'Simpan Perubahan' : 'Publikasikan Produk' }}
     </button>
 </form>
