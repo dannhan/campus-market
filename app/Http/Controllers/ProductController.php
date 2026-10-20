@@ -7,19 +7,22 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\University;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
     /**
      * Browse the marketplace with search and filters (SRS-005, SRS-006).
+     *
+     * Requests with `fragment=1` receive the next page of cards as JSON so the
+     * product grid can append them without a full page reload.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $filters = $request->only(['q', 'category', 'university', 'condition', 'type', 'min_price', 'max_price', 'sort']);
 
@@ -56,6 +59,16 @@ class ProductController extends Controller
             }, fn ($query) => $query->latest())
             ->paginate(12)
             ->withQueryString();
+
+        if ($request->boolean('fragment')) {
+            return response()->json([
+                'html' => view('products._cards', ['products' => $products])->render(),
+                'next_page_url' => $products->nextPageUrl(),
+                'has_more' => $products->hasMorePages(),
+                'remaining' => max($products->total() - ($products->lastItem() ?? 0), 0),
+                'count' => $products->count(),
+            ]);
+        }
 
         return view('products.index', [
             'products' => $products,

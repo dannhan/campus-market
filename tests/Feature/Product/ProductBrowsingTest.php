@@ -15,10 +15,15 @@ class ProductBrowsingTest extends TestCase
     use RefreshDatabase;
 
     protected University $undip;
+
     protected University $ugm;
+
     protected User $undipSeller;
+
     protected User $ugmSeller;
+
     protected Category $bookCategory;
+
     protected Category $gadgetCategory;
 
     protected function setUp(): void
@@ -105,7 +110,7 @@ class ProductBrowsingTest extends TestCase
             'user_id' => $seller->id,
             'category_id' => $category->id,
             'title' => 'Produk',
-            'slug' => Product::generateUniqueSlug('Produk ' . uniqid()),
+            'slug' => Product::generateUniqueSlug('Produk '.uniqid()),
             'description' => 'Deskripsi produk.',
             'price' => 50000,
             'condition' => 'used',
@@ -152,13 +157,13 @@ class ProductBrowsingTest extends TestCase
 
     public function test_search_matches_title_and_description(): void
     {
-        $this->get('/products?q=' . urlencode('Struktur Data'))
+        $this->get('/products?q='.urlencode('Struktur Data'))
             ->assertOk()
             ->assertSee('Buku Struktur Data Edisi Revisi')
             ->assertDontSee('Laptop Bekas Ram 8GB');
 
         // "ujian kalkulus" only appears in the Casio description
-        $this->get('/products?q=' . urlencode('ujian kalkulus'))
+        $this->get('/products?q='.urlencode('ujian kalkulus'))
             ->assertOk()
             ->assertSee('Kalkulator Casio FX-991')
             ->assertDontSee('Buku Struktur Data Edisi Revisi');
@@ -216,5 +221,36 @@ class ProductBrowsingTest extends TestCase
         $this->get('/products?condition=extra_terrestrial&type=trade')
             ->assertOk()
             ->assertSee('Buku Struktur Data Edisi Revisi');
+    }
+
+    public function test_product_grid_can_load_the_next_page_as_a_fragment(): void
+    {
+        for ($i = 1; $i <= 9; $i++) {
+            Product::create($this->productAttributes($this->undipSeller, $this->bookCategory, [
+                'title' => 'Produk Tambahan '.$i,
+                'description' => 'Produk tambahan untuk pengujian muat lebih banyak.',
+                'price' => 300000 + $i,
+            ]));
+        }
+
+        $firstPage = $this->getJson('/products?fragment=1&sort=price_asc');
+
+        $firstPage->assertOk()
+            ->assertJsonPath('has_more', true)
+            ->assertJsonPath('remaining', 1)
+            ->assertJsonPath('count', 12);
+
+        $this->assertStringContainsString('sort=price_asc', $firstPage->json('next_page_url'));
+        $this->assertStringContainsString('Buku Struktur Data Edisi Revisi', $firstPage->json('html'));
+
+        $secondPage = $this->getJson('/products?fragment=1&sort=price_asc&page=2');
+
+        $secondPage->assertOk()
+            ->assertJsonPath('has_more', false)
+            ->assertJsonPath('remaining', 0)
+            ->assertJsonPath('count', 1);
+
+        $this->assertStringContainsString('Laptop Bekas Ram 8GB', $secondPage->json('html'));
+        $this->assertStringNotContainsString('Buku Struktur Data Edisi Revisi', $secondPage->json('html'));
     }
 }

@@ -83,27 +83,111 @@
             <p class="text-xs text-slate-400 mt-1">Coba ubah kata kunci atau filter pencarian.</p>
         </div>
     @else
-        <div class="grid grid-cols-2 gap-3">
-            @foreach ($products as $product)
-                <a href="{{ route('products.show', $product) }}" class="block bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-teal-200 transition">
-                    <div class="aspect-square bg-teal-50 overflow-hidden">
-                        <img src="{{ $product->cover_image_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover" loading="lazy">
-                    </div>
-                    <div class="p-2.5">
-                        <p class="text-[11px] font-semibold text-teal-700 uppercase tracking-wide">{{ $product->category->name }}</p>
-                        <h3 class="text-xs font-semibold text-slate-800 mt-0.5 line-clamp-2 leading-snug">{{ $product->title }}</h3>
-                        <p class="text-sm font-extrabold text-slate-900 mt-1">{{ $product->formatted_price }}{{ $product->transaction_type === 'rent' ? ' <span class="text-[10px] font-semibold text-slate-400">/sewa</span>' : '' }}</p>
-                        <div class="flex items-center justify-between mt-1.5">
-                            <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 font-medium">{{ $product->condition_label }}</span>
-                            <span class="text-[10px] text-slate-400 truncate max-w-[80px]">{{ $product->user?->university?->name ?? 'Mahasiswa' }}</span>
-                        </div>
-                    </div>
-                </a>
-            @endforeach
-        </div>
+        <div
+            x-data="{
+                nextUrl: @js($products->nextPageUrl()),
+                remaining: {{ max($products->total() - ($products->lastItem() ?? 0), 0) }},
+                hasNext: @js($products->hasMorePages()),
+                startedWithMore: @js($products->hasMorePages()),
+                perPage: {{ $products->perPage() }},
+                currentPage: {{ $products->currentPage() }},
+                initialLoaded: {{ $products->count() }},
+                loading: false,
+                error: null,
+                statusMessage: '',
+                async loadMore() {
+                    if (this.loading || ! this.hasNext || ! this.nextUrl) {
+                        return;
+                    }
 
-        <div class="mt-6">
-            {{ $products->links() }}
+                    this.loading = true;
+                    this.error = null;
+
+                    try {
+                        const url = new URL(this.nextUrl, window.location.origin);
+                        const extraLoaded = Math.max(this.$refs.grid.children.length - this.initialLoaded, 0);
+                        const nextPage = this.currentPage + Math.floor(extraLoaded / this.perPage) + 1;
+
+                        url.searchParams.set('page', String(nextPage));
+                        url.searchParams.set('fragment', '1');
+
+                        const response = await fetch(url.toString(), {
+                            cache: 'no-store',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (! response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+
+                        const data = await response.json();
+
+                        this.$refs.grid.insertAdjacentHTML('beforeend', data.html);
+                        this.nextUrl = data.next_page_url;
+                        this.hasNext = data.has_more;
+                        this.remaining = data.remaining;
+                        this.statusMessage = data.count + ' produk lagi ditampilkan.';
+
+                        if (! data.has_more) {
+                            this.statusMessage += ' Semua produk sudah ditampilkan.';
+                        }
+                    } catch (error) {
+                        this.error = 'Gagal memuat produk. Periksa koneksi Anda dan coba lagi.';
+                        this.statusMessage = this.error;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+            }"
+        >
+            <div
+                x-ref="grid"
+                id="product-grid"
+                class="grid grid-cols-2 gap-3"
+                :aria-busy="loading ? 'true' : 'false'"
+            >
+                @include('products._cards', ['products' => $products])
+            </div>
+
+            <div class="mt-5">
+                <button
+                    type="button"
+                    x-show="hasNext"
+                    x-cloak
+                    @click="loadMore()"
+                    :disabled="loading"
+                    class="w-full inline-flex items-center justify-center gap-2 py-2.5 bg-white border border-slate-200 text-teal-700 text-xs font-semibold rounded-xl hover:border-teal-300 hover:bg-teal-50/50 disabled:opacity-60 disabled:cursor-wait transition"
+                >
+                    <svg x-show="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <svg x-show="! loading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span x-text="loading ? 'Memuat produk...' : 'Muat ' + remaining + ' produk lagi'"></span>
+                </button>
+
+                <div x-show="error" x-cloak class="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-center">
+                    <p class="text-[11px] font-medium text-rose-600" x-text="error"></p>
+                    <button type="button" @click="loadMore()" class="mt-1.5 text-[11px] font-bold text-rose-700 underline">Coba lagi</button>
+                </div>
+
+                <p x-show="startedWithMore && ! hasNext && ! loading" x-cloak class="text-center text-[11px] font-medium text-slate-400">
+                    Semua produk sudah ditampilkan.
+                </p>
+            </div>
+
+            <p class="sr-only" role="status" aria-live="polite" x-text="statusMessage"></p>
+
+            <noscript>
+                <div class="mt-6">
+                    {{ $products->links() }}
+                </div>
+            </noscript>
         </div>
     @endif
 </div>

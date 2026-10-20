@@ -9,6 +9,11 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* Alpine elements stay hidden until the component is initialized */
+[x-cloak] {
+    display: none !important;
+}
+
 /* Horizontal scrollers (category chips) without a visible scrollbar */
 @utility scrollbar-hide {
     -ms-overflow-style: none;
