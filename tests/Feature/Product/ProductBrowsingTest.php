@@ -199,6 +199,15 @@ class ProductBrowsingTest extends TestCase
             ->assertDontSee('Kalkulator Casio FX-991');
     }
 
+    public function test_rental_price_suffix_is_rendered_as_html_not_escaped_text(): void
+    {
+        $response = $this->get('/products?type=rent');
+
+        $response->assertOk()
+            ->assertSee('<span class="text-[10px] font-semibold text-slate-400">/sewa</span>', false)
+            ->assertDontSee('&lt;span class="text-[10px] font-semibold text-slate-400"&gt;/sewa&lt;/span&gt;', false);
+    }
+
     public function test_filter_by_price_range(): void
     {
         $this->get('/products?min_price=100000&max_price=200000')

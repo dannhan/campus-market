@@ -124,7 +124,7 @@ Untuk melihat laporan pengujian detail per skenario:
 php artisan test --testdox
 ```
 
-Cakupan pengujian (83 skenario lulus, 349 asersi):
+Cakupan pengujian (84 skenario lulus, 352 asersi):
 - **Registrasi**: Validasi domain universitas, pencocokan data NIM pangkalan, penolakan format email tidak valid, deteksi duplikasi email, konfirmasi password, kewajiban menyetujui ketentuan.
 - **Verifikasi Email**: Pengiriman event verifikasi, validasi signature URL hash, proteksi rute middleware `verified`, pencegahan verifikasi ganda, kirim ulang tautan.
 - **Autentikasi**: Login berhasil, penolakan kredensial salah, pengaktifan sesi "Remember Me", proteksi pengunjung anonim, logout dan regenerasi sesi/CSRF.
