@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +52,35 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Student::class);
     }
 
+    public function buyerConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'buyer_id');
+    }
+
+    public function sellerConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'seller_id');
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
+     * Get total unread messages across all active conversations.
+     */
+    public function unreadMessagesCount(): int
+    {
+        return Message::query()
+            ->whereNull('read_at')
+            ->where('sender_id', '!=', $this->id)
+            ->whereHas('conversation', function ($q) {
+                $q->where('buyer_id', $this->id)->orWhere('seller_id', $this->id);
+            })
+            ->count();
+    }
+
     /**
      * Convenience accessor for the user's university.
      */
@@ -85,6 +115,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $initials = urlencode($this->name ?: 'Mahasiswa');
+
         return "https://ui-avatars.com/api/?name={$initials}&color=0D9488&background=CCFBF1";
     }
 
@@ -97,7 +128,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'Belum ada rating';
         }
 
-        return number_format((float) $this->seller_rating, 1) . ' / 5.0 (' . $this->seller_review_count . ' ulasan)';
+        return number_format((float) $this->seller_rating, 1).' / 5.0 ('.$this->seller_review_count.' ulasan)';
     }
 
     /**
@@ -109,6 +140,6 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'Belum ada rating';
         }
 
-        return number_format((float) $this->buyer_rating, 1) . ' / 5.0 (' . $this->buyer_review_count . ' ulasan)';
+        return number_format((float) $this->buyer_rating, 1).' / 5.0 ('.$this->buyer_review_count.' ulasan)';
     }
 }

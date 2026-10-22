@@ -2,9 +2,10 @@
 @php($isHome = $route === 'welcome')
 @php($isSearch = in_array($route, ['products.index', 'products.show']))
 @php($isSell = in_array($route, ['products.create', 'products.edit']))
+@php($isChat = $route === 'chats.index' || str_starts_with((string) $route, 'chats.'))
 @php($isProfile = $route === 'profile' || str_starts_with((string) $route, 'profile.') || str_starts_with((string) $route, 'offers.'))
 
-<!-- Bottom Navigation (Sprint 1 visual design; Cari & Jual live since Sprint 2, Chat follows in Sprint 3) -->
+<!-- Bottom Navigation (Sprint 1 visual design; Cari & Jual live since Sprint 2, Chat live since Sprint 3) -->
 <!-- Active tab is color-only on purpose: a bolder active label changes its width and shifts the neighbouring tabs. -->
 <nav class="fixed bottom-0 max-w-md w-full bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-around py-2.5 px-2 z-20 shadow-lg">
     <!-- Beranda -->
@@ -33,13 +34,17 @@
         <span class="text-[10px] mt-0.5">Jual</span>
     </a>
 
-    <!-- Chat (Sprint 3) -->
-    <div class="flex flex-col items-center text-slate-300 cursor-not-allowed" title="Segera Hadir: Sprint 3">
+    <!-- Chat (Sprint 3 / SRS-016) -->
+    <a href="{{ route('chats.index') }}" class="relative flex flex-col items-center {{ $isChat ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600' }} transition">
+        @php($unreadNavCount = auth()->user()?->unreadMessagesCount() ?? 0)
+        @if ($unreadNavCount > 0)
+            <span class="absolute -top-0.5 right-1 w-2.5 h-2.5 bg-teal-600 rounded-full ring-2 ring-white"></span>
+        @endif
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
         <span class="text-[10px] mt-0.5">Chat</span>
-    </div>
+    </a>
 
     <!-- Saya / Profil -->
     <a href="{{ route('profile') }}" class="flex flex-col items-center {{ $isProfile ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600' }} transition">

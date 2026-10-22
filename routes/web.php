@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\ProductController;
@@ -74,6 +75,12 @@ Route::middleware('auth')->group(function () {
             ->name('offers.respond');
         Route::post('/offers/{offer}/cancel', [OfferController::class, 'cancel'])
             ->name('offers.cancel');
+
+        // Chat System (SRS-016)
+        Route::get('/chats', [ConversationController::class, 'index'])->name('chats.index');
+        Route::post('/products/{product}/chat', [ConversationController::class, 'start'])->name('products.chat');
+        Route::get('/chats/{conversation}', [ConversationController::class, 'show'])->name('chats.show');
+        Route::post('/chats/{conversation}/messages', [ConversationController::class, 'storeMessage'])->name('chats.messages.store');
     });
 });
 
@@ -81,4 +88,3 @@ Route::middleware('auth')->group(function () {
 Route::get('/products/{product}', [ProductController::class, 'show'])
     ->whereNumber('product')
     ->name('products.show');
-
