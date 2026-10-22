@@ -3,7 +3,7 @@
 @php($isSearch = in_array($route, ['products.index', 'products.show']))
 @php($isSell = in_array($route, ['products.create', 'products.edit']))
 @php($isChat = $route === 'chats.index' || str_starts_with((string) $route, 'chats.'))
-@php($isProfile = $route === 'profile' || str_starts_with((string) $route, 'profile.') || str_starts_with((string) $route, 'offers.'))
+@php($isProfile = $route === 'profile' || str_starts_with((string) $route, 'profile.') || str_starts_with((string) $route, 'offers.') || str_starts_with((string) $route, 'wishlist.'))
 
 <!-- Bottom Navigation (Sprint 1 visual design; Cari & Jual live since Sprint 2, Chat live since Sprint 3) -->
 <!-- Active tab is color-only on purpose: a bolder active label changes its width and shifts the neighbouring tabs. -->
