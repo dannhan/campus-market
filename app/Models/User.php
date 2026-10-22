@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +53,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Student::class);
     }
 
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function wishlistProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'wishlists')->withTimestamps();
+    }
+
+    public function hasWishlisted(Product $product): bool
+    {
+        return $this->wishlists()->where('product_id', $product->id)->exists();
+    }
+
     /**
      * Convenience accessor for the user's university.
      */
@@ -85,6 +102,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $initials = urlencode($this->name ?: 'Mahasiswa');
+
         return "https://ui-avatars.com/api/?name={$initials}&color=0D9488&background=CCFBF1";
     }
 
@@ -97,7 +115,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'Belum ada rating';
         }
 
-        return number_format((float) $this->seller_rating, 1) . ' / 5.0 (' . $this->seller_review_count . ' ulasan)';
+        return number_format((float) $this->seller_rating, 1).' / 5.0 ('.$this->seller_review_count.' ulasan)';
     }
 
     /**
@@ -109,6 +127,6 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'Belum ada rating';
         }
 
-        return number_format((float) $this->buyer_rating, 1) . ' / 5.0 (' . $this->buyer_review_count . ' ulasan)';
+        return number_format((float) $this->buyer_rating, 1).' / 5.0 ('.$this->buyer_review_count.' ulasan)';
     }
 }

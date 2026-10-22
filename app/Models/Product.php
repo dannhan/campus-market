@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -94,6 +95,34 @@ class Product extends Model
     }
 
     /**
+     * Get the wishlist records for this product.
+     */
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * Get the users who added this product to their wishlist.
+     */
+    public function wishlistedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'wishlists')->withTimestamps();
+    }
+
+    /**
+     * Determine whether the given user has saved this product.
+     */
+    public function isWishlistedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $this->wishlists()->where('user_id', $user->id)->exists();
+    }
+
+    /**
      * Get the cover image URL with a graceful placeholder fallback.
      */
     public function getCoverImageUrlAttribute(): string
@@ -112,7 +141,7 @@ class Product extends Model
      */
     public function getFormattedPriceAttribute(): string
     {
-        return 'Rp ' . number_format((float) $this->price, 0, ',', '.');
+        return 'Rp '.number_format((float) $this->price, 0, ',', '.');
     }
 
     /**
@@ -153,7 +182,7 @@ class Product extends Model
             return $query;
         }
 
-        $like = '%' . str_replace('%', '\%', $term) . '%';
+        $like = '%'.str_replace('%', '\%', $term).'%';
 
         return $query->where(function (Builder $q) use ($like) {
             $q->where('title', 'like', $like)
@@ -201,11 +230,11 @@ class Product extends Model
         $attempt = 1;
 
         while (static::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . Str::lower(Str::random(4));
+            $slug = $base.'-'.Str::lower(Str::random(4));
             $attempt++;
 
             if ($attempt > 10) {
-                $slug = $base . '-' . uniqid();
+                $slug = $base.'-'.uniqid();
                 break;
             }
         }
