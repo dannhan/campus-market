@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -53,19 +52,33 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Student::class);
     }
 
-    public function wishlists(): HasMany
+    public function buyerConversations(): HasMany
     {
-        return $this->hasMany(Wishlist::class);
+        return $this->hasMany(Conversation::class, 'buyer_id');
     }
 
-    public function wishlistProducts(): BelongsToMany
+    public function sellerConversations(): HasMany
     {
-        return $this->belongsToMany(Product::class, 'wishlists')->withTimestamps();
+        return $this->hasMany(Conversation::class, 'seller_id');
     }
 
-    public function hasWishlisted(Product $product): bool
+    public function sentMessages(): HasMany
     {
-        return $this->wishlists()->where('product_id', $product->id)->exists();
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
+     * Get total unread messages across all active conversations.
+     */
+    public function unreadMessagesCount(): int
+    {
+        return Message::query()
+            ->whereNull('read_at')
+            ->where('sender_id', '!=', $this->id)
+            ->whereHas('conversation', function ($q) {
+                $q->where('buyer_id', $this->id)->orWhere('seller_id', $this->id);
+            })
+            ->count();
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\ProductController;
@@ -76,10 +77,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/offers/{offer}/cancel', [OfferController::class, 'cancel'])
             ->name('offers.cancel');
 
-        // Wishlist / Bookmark (SRS-017)
-        Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
-        Route::post('/products/{product}/wishlist', [WishlistController::class, 'toggle'])->name('products.wishlist.toggle');
-        Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+        // Chat System (SRS-016)
+        Route::get('/chats', [ConversationController::class, 'index'])->name('chats.index');
+        Route::post('/products/{product}/chat', [ConversationController::class, 'start'])->name('products.chat');
+        Route::get('/chats/{conversation}', [ConversationController::class, 'show'])->name('chats.show');
+        Route::post('/chats/{conversation}/messages', [ConversationController::class, 'storeMessage'])->name('chats.messages.store');
     });
 });
 

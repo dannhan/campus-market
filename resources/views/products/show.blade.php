@@ -109,6 +109,17 @@
                     </a>
                 @endif
             @elseif ($product->status === 'active')
+                <!-- Direct Chat Action (SRS-016) -->
+                <form method="POST" action="{{ route('products.chat', $product) }}" class="mt-5">
+                    @csrf
+                    <button type="submit" class="w-full py-3 bg-white border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        Chat Penjual
+                    </button>
+                </form>
+
                 <!-- Bargaining (SRS-010) -->
                 @if ($myPendingOffer)
                     <div class="mt-5 bg-teal-50 border border-teal-100 rounded-2xl p-4 text-center">
