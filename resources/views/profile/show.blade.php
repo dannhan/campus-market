@@ -135,6 +135,32 @@
             </div>
         </a>
 
+        <!-- Wishlist / Bookmark (SRS-017) -->
+        <a href="{{ route('wishlist.index') }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800">Wishlist Saya</span>
+                        @php($wishlistCount = $user->wishlists()->count())
+                        @if ($wishlistCount > 0)
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100">
+                                {{ $wishlistCount }} barang
+                            </span>
+                        @endif
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium">Daftar produk incaran yang kamu simpan</div>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
         <!-- Rating Card (Prepared for future sprints without fabricated data) -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">

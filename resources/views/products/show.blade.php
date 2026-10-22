@@ -21,12 +21,28 @@
             <img src="{{ $product->cover_image_url }}" alt="{{ $product->title }}" class="absolute inset-0 w-full h-full object-cover">
         @endif
 
-        <a href="{{ route('products.index') }}" class="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:bg-white transition">
+        <a href="{{ route('products.index') }}" class="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:bg-white transition z-10">
             <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </a>
 
+        @auth
+            @if ($product->user_id !== auth()->id())
+                @php($isWishlisted = $product->isWishlistedBy(auth()->user()))
+                <form method="POST" action="{{ route('products.wishlist.toggle', $product) }}" class="absolute top-4 right-4 z-10">
+                    @csrf
+                    <button type="submit"
+                            title="{{ $isWishlisted ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist' }}"
+                            class="w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:bg-white transition active:scale-90 {{ $isWishlisted ? 'text-rose-500' : 'text-slate-600 hover:text-rose-500' }}">
+                        <svg class="w-5 h-5 {{ $isWishlisted ? 'fill-current' : 'fill-none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                    </button>
+                </form>
+            @endif
+        @endauth
+
         @if ($product->status !== 'active')
-            <span class="absolute top-4 right-4 px-3 py-1.5 rounded-full text-[11px] font-bold {{ $product->status === 'sold' ? 'bg-slate-800 text-white' : 'bg-amber-500 text-white' }}">
+            <span class="absolute bottom-4 right-4 px-3 py-1.5 rounded-full text-[11px] font-bold {{ $product->status === 'sold' ? 'bg-slate-800 text-white' : 'bg-amber-500 text-white' }} shadow-md">
                 {{ $product->status === 'sold' ? 'TERJUAL' : 'DITARIK' }}
             </span>
         @endif
