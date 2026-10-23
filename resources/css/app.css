@@ -24,6 +24,24 @@
     }
 }
 
+/* Countdown bar shown at the bottom of an auto-dismissing toast. */
+@keyframes toast-progress {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.toast-progress {
+    transform-origin: left;
+    animation-name: toast-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
 .turbo-progress-bar {
     height: 3px;
     background-color: #0d9488;
