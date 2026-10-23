@@ -35,9 +35,23 @@
 
         <!-- Main Content -->
         @php($showNav = auth()->check() && auth()->user()->hasVerifiedEmail())
-        <main class="flex-1 flex flex-col {{ $showNav ? 'pb-16' : '' }}">
+        @php($hasBottomBar = trim($__env->yieldContent('bottom_bar')) !== '')
+        @php($mainBottomPadding = match (true) {
+            $showNav && $hasBottomBar => 'pb-40',
+            $hasBottomBar => 'pb-28',
+            $showNav => 'pb-16',
+            default => '',
+        })
+        <main class="flex-1 flex flex-col {{ $mainBottomPadding }}">
             @yield('content')
         </main>
+
+        @if ($hasBottomBar)
+            <!-- Sticky page action bar: sits above the bottom nav, below toasts. -->
+            <div class="fixed inset-x-0 {{ $showNav ? 'bottom-16' : 'bottom-0' }} z-30 mx-auto w-full max-w-md border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)] backdrop-blur-md">
+                @yield('bottom_bar')
+            </div>
+        @endif
 
         @if ($showNav)
             @include('layouts.nav')
