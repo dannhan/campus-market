@@ -141,8 +141,16 @@
                         }
 
                         const data = await response.json();
+                        const previousCardCount = this.$refs.grid.children.length;
 
                         this.$refs.grid.insertAdjacentHTML('beforeend', data.html);
+
+                        if (window.Alpine) {
+                            Array.from(this.$refs.grid.children)
+                                .slice(previousCardCount)
+                                .forEach((card) => window.Alpine.initTree(card));
+                        }
+
                         this.nextUrl = data.next_page_url;
                         this.hasNext = data.has_more;
                         this.remaining = data.remaining;

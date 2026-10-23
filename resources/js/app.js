@@ -37,4 +37,46 @@ document.addEventListener('turbo:load', () => {
     }
 });
 
+Alpine.data('wishlistToggle', (initialWishlisted = false) => ({
+    wishlisted: Boolean(initialWishlisted),
+    pending: false,
+    statusMessage: '',
+
+    async toggle(event) {
+        if (this.pending) {
+            return;
+        }
+
+        const form = event.currentTarget;
+        this.pending = true;
+        this.statusMessage = '';
+
+        try {
+            const response = await fetch(form.action, {
+                cache: 'no-store',
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new FormData(form),
+            });
+
+            if (! response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+
+            this.wishlisted = Boolean(data.wishlisted);
+            this.statusMessage = data.message ?? '';
+        } catch {
+            // Fall back to the normal POST so the server can show its flash message.
+            form.submit();
+        } finally {
+            this.pending = false;
+        }
+    },
+}));
+
 Alpine.start();
