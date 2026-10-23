@@ -3,7 +3,11 @@
 @section('title', $product->title . ' — CampusMarket')
 
 @section('content')
-<div x-data="{ activeImage: 0 }" class="flex-1 flex flex-col">
+@php($reopenOfferSheet = $errors->has('offered_price') || $errors->has('message'))
+<div x-data="{ activeImage: 0, offerSheetOpen: {{ $reopenOfferSheet ? 'true' : 'false' }} }"
+     @open-offer-sheet.window="offerSheetOpen = true; $nextTick(() => $refs.offerPrice.focus())"
+     @keydown.escape.window="offerSheetOpen = false"
+     class="flex-1 flex flex-col">
     <!-- Image Gallery (SRS-007) -->
     <div class="relative bg-teal-50 aspect-square">
         @if ($product->images->isNotEmpty())
@@ -109,18 +113,7 @@
                     </a>
                 @endif
             @elseif ($product->status === 'active')
-                <!-- Direct Chat Action (SRS-016) -->
-                <form method="POST" action="{{ route('products.chat', $product) }}" class="mt-5">
-                    @csrf
-                    <button type="submit" class="w-full py-3 bg-white border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
-                        Chat Penjual
-                    </button>
-                </form>
-
-                <!-- Bargaining (SRS-010) -->
+                <!-- Bargaining (SRS-010): inline status only; chat and the offer entry point live in the sticky bar. -->
                 @if ($myPendingOffer)
                     <div class="mt-5 bg-teal-50 border border-teal-100 rounded-2xl p-4 text-center">
                         <p class="text-xs font-semibold text-teal-800">Penawaran Anda sedang menunggu respons penjual</p>
@@ -134,25 +127,112 @@
                     <div class="mt-5 bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center">
                         <p class="text-xs text-slate-500 font-medium">Penjual tidak menerima tawaran harga untuk produk ini.</p>
                     </div>
-                @else
-                    <form method="POST" action="{{ route('offers.store', $product) }}" class="mt-5 bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-                        @csrf
-                        <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Ajukan Tawaran Harga</h2>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="number" name="offered_price" min="1000" step="500" required placeholder="Harga tawaran"
-                                   class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition">
-                            <input type="text" name="message" maxlength="500" placeholder="Pesan (opsional)"
-                                   class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition">
-                        </div>
-                        <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-teal-600/20 transition">Kirim Tawaran</button>
-                    </form>
                 @endif
             @endif
-        @else
-            <a href="{{ route('login') }}" class="mt-5 block text-center py-3.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-teal-600/20 transition">
-                Masuk untuk menawar produk ini
-            </a>
         @endauth
     </div>
+
+    @auth
+        @if (! $isOwner && $product->status === 'active' && ! $myPendingOffer && $product->bargainable)
+            <!-- Offer bottom sheet (SRS-010): normal POST so the server redirect and toast still work. -->
+            <div x-show="offerSheetOpen" x-cloak class="fixed inset-0 z-40">
+                <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="offerSheetOpen = false" aria-hidden="true"></div>
+
+                <div role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="offer-sheet-title"
+                     class="absolute inset-x-0 bottom-0 mx-auto w-full max-w-md bg-white rounded-t-2xl shadow-2xl px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] max-h-[90vh] overflow-y-auto"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="translate-y-full"
+                     x-transition:enter-end="translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="translate-y-0"
+                     x-transition:leave-end="translate-y-full">
+                    <div class="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-200"></div>
+
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 id="offer-sheet-title" class="text-base font-extrabold text-slate-900">Buat Penawaran</h2>
+                        <button type="button" @click="offerSheetOpen = false" aria-label="Tutup" class="w-11 h-11 -mr-2 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="mt-3 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                        <img src="{{ $product->cover_image_url }}" alt="{{ $product->title }}" class="w-12 h-12 rounded-lg object-cover border border-slate-200">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-bold text-slate-800 truncate">{{ $product->title }}</p>
+                            <p class="text-sm font-extrabold text-teal-700 mt-0.5">{{ $product->formatted_price }}</p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ route('offers.store', $product) }}" class="mt-4 space-y-3">
+                        @csrf
+
+                        <div>
+                            <label for="offered_price" class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Harga tawaran</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-bold text-slate-400">Rp</span>
+                                <input id="offered_price" type="number" name="offered_price" x-ref="offerPrice" required min="1000" step="500" inputmode="numeric" value="{{ old('offered_price') }}" placeholder="{{ number_format((float) $product->price, 0, ',', '.') }}"
+                                       class="w-full min-h-[52px] pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-xl font-extrabold text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition">
+                            </div>
+                            @error('offered_price')
+                                <p class="mt-1.5 text-[11px] font-medium text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="offer_message" class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Pesan <span class="font-medium normal-case text-slate-400">(opsional)</span></label>
+                            <textarea id="offer_message" name="message" rows="2" maxlength="500" placeholder="Tulis pesan untuk penjual..."
+                                      class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition resize-none">{{ old('message') }}</textarea>
+                            @error('message')
+                                <p class="mt-1.5 text-[11px] font-medium text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <p class="text-[11px] text-slate-500">Penjual akan menerima penawaran Anda.</p>
+
+                        <button type="submit" class="w-full min-h-[44px] px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-teal-600/20 transition">
+                            Kirim Tawaran
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endif
+    @endauth
 </div>
+@endsection
+
+@section('bottom_bar')
+    @guest
+        @if ($product->status === 'active')
+            <a href="{{ route('login') }}" class="flex w-full min-h-[44px] items-center justify-center px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-teal-600/20 transition">
+                Masuk untuk menawar
+            </a>
+        @endif
+    @endguest
+
+    @auth
+        @if (! $isOwner && $product->status === 'active')
+            <div class="flex items-stretch gap-2">
+                <!-- Direct Chat Action (SRS-016) -->
+                <form method="POST" action="{{ route('products.chat', $product) }}" class="flex-1">
+                    @csrf
+                    <button type="submit" class="flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-3 bg-white border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs font-bold rounded-xl transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        Chat Penjual
+                    </button>
+                </form>
+
+                @if (! $myPendingOffer && $product->bargainable)
+                    <button type="button" x-data @click="$dispatch('open-offer-sheet')" class="flex-1 min-h-[44px] px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-md shadow-teal-600/20 transition">
+                        Buat Penawaran
+                    </button>
+                @endif
+            </div>
+        @endif
+    @endauth
 @endsection
