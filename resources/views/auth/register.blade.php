@@ -23,24 +23,25 @@
         </div>
 
         <!-- Visual Verification Stepper (Wireframe Step Tracker) -->
-        <div class="bg-teal-50/70 border border-teal-100 rounded-xl p-3 mb-5">
-            <div class="flex items-center justify-between text-[11px] font-semibold text-slate-700">
-                <div class="flex items-center gap-1.5 text-teal-800">
-                    <span class="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold">1</span>
-                    <span>Data Diri</span>
-                </div>
-                <div class="w-8 border-t border-teal-300"></div>
-                <div class="flex items-center gap-1.5 text-slate-400">
-                    <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">2</span>
-                    <span>Validasi Pangkalan</span>
-                </div>
-                <div class="w-8 border-t border-slate-200"></div>
-                <div class="flex items-center gap-1.5 text-slate-400">
-                    <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">3</span>
-                    <span>Aktivasi Email</span>
-                </div>
+        <nav aria-label="Tahap registrasi" class="bg-teal-50/70 border border-teal-100 rounded-xl p-3 mb-5">
+            <div class="relative">
+                <span class="absolute left-[16.6667%] right-[16.6667%] top-3 h-px bg-slate-200" aria-hidden="true"></span>
+                <ol class="relative grid grid-cols-3 gap-2 text-[11px] font-semibold text-slate-700">
+                    <li class="flex min-w-0 flex-col items-center gap-1 text-center text-teal-800" aria-current="step">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-[10px] font-bold text-white">1</span>
+                        <span class="leading-tight">Data Diri</span>
+                    </li>
+                    <li class="flex min-w-0 flex-col items-center gap-1 text-center text-slate-400">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">2</span>
+                        <span class="leading-tight">Validasi Pangkalan</span>
+                    </li>
+                    <li class="flex min-w-0 flex-col items-center gap-1 text-center text-slate-400">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">3</span>
+                        <span class="leading-tight">Aktivasi Email</span>
+                    </li>
+                </ol>
             </div>
-        </div>
+        </nav>
 
         <!-- Registration Form -->
         <form method="POST" action="{{ route('register') }}" data-turbo="false" class="space-y-3.5" x-data="{ showPass: false, showConfirm: false }">
