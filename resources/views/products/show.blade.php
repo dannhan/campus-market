@@ -32,15 +32,29 @@
         @auth
             @if ($product->user_id !== auth()->id())
                 @php($isWishlisted = $product->isWishlistedBy(auth()->user()))
-                <form method="POST" action="{{ route('products.wishlist.toggle', $product) }}" class="absolute top-4 right-4 z-10">
+                <form method="POST"
+                      action="{{ route('products.wishlist.toggle', $product) }}"
+                      x-data="wishlistToggle(@js($isWishlisted))"
+                      @submit.prevent="toggle($event)"
+                      class="absolute top-4 right-4 z-10">
                     @csrf
                     <button type="submit"
                             title="{{ $isWishlisted ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist' }}"
-                            class="w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:bg-white transition active:scale-90 {{ $isWishlisted ? 'text-rose-500' : 'text-slate-600 hover:text-rose-500' }}">
-                        <svg class="w-5 h-5 {{ $isWishlisted ? 'fill-current' : 'fill-none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                            aria-label="{{ $isWishlisted ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist' }}"
+                            aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}"
+                            :title="wishlisted ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist'"
+                            :aria-label="wishlisted ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist'"
+                            :aria-pressed="wishlisted ? 'true' : 'false'"
+                            :disabled="pending"
+                            :class="{ 'text-rose-500': wishlisted, 'text-slate-600 hover:text-rose-500': ! wishlisted }"
+                            class="w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:bg-white transition active:scale-90 disabled:opacity-60 {{ $isWishlisted ? 'text-rose-500' : 'text-slate-600 hover:text-rose-500' }}">
+                        <svg class="w-5 h-5 {{ $isWishlisted ? 'fill-current' : 'fill-none' }}"
+                             :class="{ 'fill-current': wishlisted, 'fill-none': ! wishlisted }"
+                             stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
                     </button>
+                    <span class="sr-only" role="status" aria-live="polite" x-text="statusMessage"></span>
                 </form>
             @endif
         @endauth
