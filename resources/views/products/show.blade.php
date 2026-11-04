@@ -105,7 +105,7 @@
             <img src="{{ $seller->avatar_url }}" alt="{{ $seller->name }}" class="w-11 h-11 rounded-xl object-cover border border-slate-200">
             <div class="min-w-0">
                 <p class="text-sm font-bold text-slate-800 truncate">{{ $seller->name }}</p>
-                <p class="text-[11px] text-slate-500 truncate">{{ $seller->university?->name ?? 'Mahasiswa' }} @if($seller->university)· {{ $seller->student->major ?? '' }}@endif</p>
+                <p class="text-[11px] text-slate-500 truncate">{{ $seller->university?->name ?? 'Mahasiswa' }} @if($seller->university)· {{ $seller->student->major ?? '' }}@endif · <span class="font-medium {{ $seller->isAlumni() ? 'text-indigo-600' : 'text-emerald-600' }}">{{ $seller->student_status_label }}</span></p>
                 <p class="text-[11px] font-medium text-amber-600 mt-0.5">★ {{ $seller->seller_rating_display }}</p>
             </div>
         </div>

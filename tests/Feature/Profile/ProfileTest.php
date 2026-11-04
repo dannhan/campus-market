@@ -59,7 +59,18 @@ class ProfileTest extends TestCase
         $response->assertSee('24060122130001');
         $response->assertSee('budi.santoso@students.undip.ac.id');
         $response->assertSee('Mahasiswa Terverifikasi');
+        $response->assertSee('Mahasiswa Aktif');
         $response->assertSee('Belum ada rating');
+    }
+
+    public function test_alumni_user_can_view_alumni_badge_and_status(): void
+    {
+        $this->user->update(['student_status' => 'alumni']);
+
+        $response = $this->actingAs($this->user)->get('/profile');
+
+        $response->assertStatus(200);
+        $response->assertSee('Alumni');
     }
 
     public function test_unauthenticated_user_is_redirected_to_login(): void
@@ -100,6 +111,9 @@ class ProfileTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Edit Profil');
         $response->assertSee('Data Kemahasiswaan Terkunci');
+        $response->assertSee('Status Mahasiswa');
+        $response->assertSee('Mahasiswa Aktif');
+        $response->assertSee('Alumni');
         $response->assertSee('24060122130001');
     }
 
@@ -116,7 +130,8 @@ class ProfileTest extends TestCase
     {
         Storage::fake('public');
 
-        $avatar = UploadedFile::fake()->image('profile.jpg', 200, 200);
+        $pngContent = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+        $avatar = UploadedFile::fake()->createWithContent('profile.png', $pngContent);
 
         $response = $this->actingAs($this->user)->patch('/profile', [
             'name' => 'Budi Santoso S.Kom',
@@ -134,13 +149,47 @@ class ProfileTest extends TestCase
 
     public function test_avatar_larger_than_two_megabytes_is_rejected(): void
     {
+        $pngContent = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+        $oversizedContent = $pngContent.str_repeat('0', 3 * 1024 * 1024);
+        $avatar = UploadedFile::fake()->createWithContent('avatar-besar.png', $oversizedContent);
+
         $response = $this->actingAs($this->user)->patch('/profile', [
             'name' => 'Budi Santoso',
-            'avatar' => UploadedFile::fake()->image('avatar-besar.jpg')->size(3072),
+            'avatar' => $avatar,
         ]);
 
         $response->assertSessionHasErrors('avatar');
         $this->assertNull($this->user->fresh()->avatar);
+    }
+
+    public function test_user_can_update_student_status_to_alumni(): void
+    {
+        $this->assertEquals('active', $this->user->student_status);
+
+        $response = $this->actingAs($this->user)->patch('/profile', [
+            'name' => 'Budi Santoso',
+            'student_status' => 'alumni',
+        ]);
+
+        $response->assertRedirect(route('profile'));
+        $response->assertSessionHas('status', 'Profil berhasil diperbarui.');
+
+        $this->user->refresh();
+        $this->assertEquals('alumni', $this->user->student_status);
+        $this->assertTrue($this->user->isAlumni());
+        $this->assertEquals('Alumni', $this->user->student_status_label);
+    }
+
+    public function test_user_cannot_update_invalid_student_status(): void
+    {
+        $response = $this->actingAs($this->user)->patch('/profile', [
+            'name' => 'Budi Santoso',
+            'student_status' => 'invalid_status',
+        ]);
+
+        $response->assertSessionHasErrors('student_status');
+        $this->user->refresh();
+        $this->assertEquals('active', $this->user->student_status);
     }
 
     public function test_protected_identity_fields_cannot_be_arbitrarily_changed(): void

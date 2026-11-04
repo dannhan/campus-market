@@ -16,6 +16,7 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'student_status' => ['nullable', 'string', 'in:active,alumni'],
         ];
     }
 
@@ -26,6 +27,7 @@ class UpdateProfileRequest extends FormRequest
             'avatar.image' => 'File avatar harus berupa gambar.',
             'avatar.mimes' => 'Format avatar yang didukung: JPG, PNG, WEBP.',
             'avatar.max' => 'Ukuran avatar maksimal 2MB.',
+            'student_status.in' => 'Status mahasiswa harus berupa Mahasiswa Aktif atau Alumni.',
         ];
     }
 }

@@ -20,12 +20,17 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'student_id',
+        'student_status',
         'email_verified_at',
         'avatar',
         'seller_rating',
         'buyer_rating',
         'seller_review_count',
         'buyer_review_count',
+    ];
+
+    protected $attributes = [
+        'student_status' => 'active',
     ];
 
     protected $hidden = [
@@ -119,6 +124,33 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isVerifiedStudent(): bool
     {
         return $this->isStudent() && $this->hasVerifiedEmail();
+    }
+
+    /**
+     * Check if user is an alumnus.
+     */
+    public function isAlumni(): bool
+    {
+        return $this->student_status === 'alumni';
+    }
+
+    /**
+     * Check if user is an active student.
+     */
+    public function isActiveStudent(): bool
+    {
+        return $this->student_status === 'active' || $this->student_status === null;
+    }
+
+    /**
+     * Human-readable label for the student status.
+     */
+    public function getStudentStatusLabelAttribute(): string
+    {
+        return match ($this->student_status) {
+            'alumni' => 'Alumni',
+            default => 'Mahasiswa Aktif',
+        };
     }
 
     /**

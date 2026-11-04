@@ -109,6 +109,25 @@
                         <p class="text-[11px] text-rose-600 mt-1 font-medium">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label for="student_status" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Status Mahasiswa <span class="text-rose-500">*</span>
+                    </label>
+                    <select
+                        id="student_status"
+                        name="student_status"
+                        required
+                        class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border @error('student_status') border-rose-500 @else border-slate-200 @enderror rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-teal-500 transition"
+                    >
+                        <option value="active" {{ old('student_status', $user->student_status ?? 'active') === 'active' ? 'selected' : '' }}>Mahasiswa Aktif</option>
+                        <option value="alumni" {{ old('student_status', $user->student_status) === 'alumni' ? 'selected' : '' }}>Alumni</option>
+                    </select>
+                    @error('student_status')
+                        <p class="text-[11px] text-rose-600 mt-1 font-medium">{{ $message }}</p>
+                    @enderror
+                    <p class="text-[10px] text-slate-400 mt-1">Pilih apakah saat ini Anda masih mahasiswa aktif atau sudah menjadi alumni.</p>
+                </div>
             </div>
 
             <!-- Read-Only Academic Identity Fields -->
