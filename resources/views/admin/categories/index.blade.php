@@ -10,13 +10,29 @@
             </svg>
         </a>
         <div class="text-center">
-            <div class="text-[10px] font-bold uppercase tracking-wider text-teal-600">Admin Panel (SRS-011)</div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-teal-600">Admin Panel</div>
             <h1 class="text-base font-bold text-slate-900 leading-tight">Kelola Kategori</h1>
         </div>
         <a href="{{ route('admin.categories.create') }}" class="w-9 h-9 -mr-1 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center transition shadow-xs" title="Tambah Kategori Baru">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
+        </a>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="px-5 pt-3 bg-white border-b border-slate-100 flex items-center gap-2">
+        <a href="{{ route('admin.categories.index') }}" class="pb-2.5 text-xs font-bold text-teal-700 border-b-2 border-teal-600 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            <span>Kategori Produk</span>
+        </a>
+        <a href="{{ route('admin.reports.index') }}" class="pb-2.5 text-xs font-medium text-slate-400 hover:text-slate-600 transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <span>Laporan & Statistik</span>
         </a>
     </div>
 

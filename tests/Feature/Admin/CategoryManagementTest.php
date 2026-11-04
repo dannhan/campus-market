@@ -99,7 +99,7 @@ class CategoryManagementTest extends TestCase
         $response = $this->actingAs($this->admin)->get('/profile');
         $response->assertStatus(200);
         $response->assertSee('Administrator Panel');
-        $response->assertSee('Kelola Kategori Produk (SRS-011)');
+        $response->assertSee('Kelola Kategori Produk');
 
         $response = $this->actingAs($this->admin)->get('/admin/categories');
 
