@@ -93,4 +93,3 @@ class DisputeController extends Controller
             ->with('status', 'Keputusan dan catatan mediasi berhasil disimpan serta dikirimkan ke pihak terkait.');
     }
 }
-

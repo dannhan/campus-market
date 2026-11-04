@@ -8,8 +8,10 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\OfferController;
+use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -97,6 +99,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/disputes/create', [DisputeController::class, 'create'])->name('disputes.create');
         Route::post('/disputes', [DisputeController::class, 'store'])->name('disputes.store');
         Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])->name('disputes.show');
+
+        // Student-Friendly Payment Methods & Transactions
+        Route::get('/profile/payments', [PaymentSettingsController::class, 'edit'])->name('profile.payments.edit');
+        Route::match(['put', 'patch'], '/profile/payments', [PaymentSettingsController::class, 'update'])->name('profile.payments.update');
+
+        Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/checkout/{product}', [TransactionController::class, 'checkout'])->name('transactions.checkout');
+        Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+        Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+        Route::post('/transactions/{transaction}/payment-proof', [TransactionController::class, 'uploadProof'])->name('transactions.proof');
+        Route::post('/transactions/{transaction}/confirm', [TransactionController::class, 'confirm'])->name('transactions.confirm');
+        Route::post('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel'])->name('transactions.cancel');
 
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

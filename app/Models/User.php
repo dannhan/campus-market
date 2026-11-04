@@ -28,6 +28,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'buyer_rating',
         'seller_review_count',
         'buyer_review_count',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_name',
+        'ewallet_provider',
+        'ewallet_account_number',
+        'ewallet_account_name',
+        'preferred_meeting_location',
     ];
 
     protected $attributes = [
@@ -198,6 +205,31 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return number_format((float) $this->seller_rating, 1).' / 5.0 ('.$this->seller_review_count.' ulasan)';
+    }
+
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'buyer_id');
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'seller_id');
+    }
+
+    public function hasPaymentSettings(): bool
+    {
+        return ! empty($this->bank_account_number) || ! empty($this->ewallet_account_number) || ! empty($this->preferred_meeting_location);
+    }
+
+    public function getBankNameLabelAttribute(): ?string
+    {
+        return Transaction::BANK_CHANNELS[$this->bank_name] ?? strtoupper($this->bank_name ?? '');
+    }
+
+    public function getEwalletProviderLabelAttribute(): ?string
+    {
+        return Transaction::EWALLET_CHANNELS[$this->ewallet_provider] ?? ucfirst($this->ewallet_provider ?? '');
     }
 
     /**

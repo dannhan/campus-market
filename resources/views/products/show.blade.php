@@ -110,6 +110,20 @@
             </div>
         </div>
 
+        <!-- Payment methods available -->
+        <div class="mt-4 p-3 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+                <span class="text-base">💳</span>
+                <div>
+                    <div class="font-bold text-slate-800">Metode Pembayaran Ramah Mahasiswa</div>
+                    <div class="text-[10px] text-slate-500">COD di Kampus · Transfer Bank · E-Wallet</div>
+                </div>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                Hemat & Aman
+            </span>
+        </div>
+
         @auth
             @if ($isOwner)
                 <!-- Owner Actions -->
@@ -127,7 +141,17 @@
                     </a>
                 @endif
             @elseif ($product->status === 'active')
-                <!-- Bargaining (SRS-010): inline status only; chat and the offer entry point live in the sticky bar. -->
+                <!-- Direct Instant Buy Action -->
+                <div class="mt-5">
+                    <a href="{{ route('transactions.checkout', $product) }}" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-teal-600/20 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                        Beli Sekarang (Pilih Metode Pembayaran)
+                    </a>
+                </div>
+
+                <!-- Bargaining: inline status only; chat and the offer entry point live in the sticky bar. -->
                 @if ($myPendingOffer)
                     <div class="mt-5 bg-teal-50 border border-teal-100 rounded-2xl p-4 text-center">
                         <p class="text-xs font-semibold text-teal-800">Penawaran Anda sedang menunggu respons penjual</p>
@@ -230,22 +254,29 @@
     @auth
         @if (! $isOwner && $product->status === 'active')
             <div class="flex items-stretch gap-2">
-                <!-- Direct Chat Action (SRS-016) -->
+                <!-- Direct Chat Action -->
                 <form method="POST" action="{{ route('products.chat', $product) }}" class="flex-1">
                     @csrf
-                    <button type="submit" class="flex w-full min-h-[44px] items-center justify-center gap-2 px-4 py-3 bg-white border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs font-bold rounded-xl transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="submit" class="flex w-full min-h-[44px] items-center justify-center gap-1.5 px-3 py-3 bg-white border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs font-bold rounded-xl transition">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
-                        Chat Penjual
+                        <span>Chat</span>
                     </button>
                 </form>
 
                 @if (! $myPendingOffer && $product->bargainable)
-                    <button type="button" x-data @click="$dispatch('open-offer-sheet')" class="flex-1 min-h-[44px] px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-md shadow-teal-600/20 transition">
-                        Buat Penawaran
+                    <button type="button" x-data @click="$dispatch('open-offer-sheet')" class="flex-1 min-h-[44px] px-3 py-3 bg-white border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs font-bold rounded-xl transition">
+                        Tawar
                     </button>
                 @endif
+
+                <a href="{{ route('transactions.checkout', $product) }}" class="flex-1 min-h-[44px] px-3 py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-md shadow-teal-600/20 transition flex items-center justify-center gap-1 text-center">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                    <span>Beli</span>
+                </a>
             </div>
         @endif
     @endauth
