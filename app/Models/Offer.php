@@ -63,7 +63,7 @@ class Offer extends Model
      */
     public function getFormattedPriceAttribute(): string
     {
-        return 'Rp ' . number_format((float) $this->offered_price, 0, ',', '.');
+        return 'Rp '.number_format((float) $this->offered_price, 0, ',', '.');
     }
 
     /**

@@ -77,7 +77,7 @@
         </div>
 
         @if ($user->isAdmin())
-            <!-- Admin Panel Section (SRS-011) -->
+            <!-- Admin Panel Section -->
             <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4 shadow-xs">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
@@ -110,6 +110,18 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                             </svg>
                             <span>Kelola Kategori Produk</span>
+                        </span>
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+
+                    <a href="{{ route('admin.disputes.index') }}" class="w-full py-2.5 px-3 bg-white border border-amber-300 hover:bg-amber-100/50 text-amber-900 font-bold rounded-xl text-xs flex items-center justify-between transition shadow-xs">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span>Mediasi Sengketa Transaksi</span>
                         </span>
                         <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -224,7 +236,35 @@
             </div>
         </a>
 
-        <!-- Wishlist / Bookmark (SRS-017) -->
+        <!-- Dispute Center -->
+        <a href="{{ route('disputes.index') }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800">Pusat Resolusi Kendala</span>
+                        @php
+                            $activeDisputesCount = $user->reportedDisputes()->whereIn('status', ['open', 'under_review'])->count() + $user->receivedDisputes()->whereIn('status', ['open', 'under_review'])->count();
+                        @endphp
+                        @if ($activeDisputesCount > 0)
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                                {{ $activeDisputesCount }} aktif
+                            </span>
+                        @endif
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium">Mediasi sengketa & pelaporan transaksi bermasalah</div>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- Wishlist / Bookmark -->
         <a href="{{ route('wishlist.index') }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">

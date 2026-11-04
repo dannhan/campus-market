@@ -15,7 +15,9 @@ class RegistrationTest extends TestCase
     use RefreshDatabase;
 
     protected University $undip;
+
     protected University $ugm;
+
     protected Student $undipStudent;
 
     protected function setUp(): void

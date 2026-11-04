@@ -29,7 +29,7 @@ class ProductFactory extends Factory
             'user_id' => User::factory(),
             'category_id' => Category::factory(),
             'title' => $title,
-            'slug' => Product::generateUniqueSlug($title . ' ' . fake()->unique()->numerify('#####')),
+            'slug' => Product::generateUniqueSlug($title.' '.fake()->unique()->numerify('#####')),
             'description' => fake()->paragraph(),
             'price' => fake()->numberBetween(10, 750) * 1000,
             'condition' => fake()->randomElement(['new', 'like_new', 'used']),

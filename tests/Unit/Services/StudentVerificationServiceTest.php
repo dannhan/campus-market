@@ -15,8 +15,11 @@ class StudentVerificationServiceTest extends TestCase
     use RefreshDatabase;
 
     protected University $undip;
+
     protected University $ugm;
+
     protected Student $student;
+
     protected StudentVerificationService $service;
 
     protected function setUp(): void
@@ -45,7 +48,7 @@ class StudentVerificationServiceTest extends TestCase
         ]);
 
         $this->service = new StudentVerificationService(
-            new DatabaseStudentVerificationProvider()
+            new DatabaseStudentVerificationProvider
         );
     }
 

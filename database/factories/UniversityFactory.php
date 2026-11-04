@@ -15,8 +15,8 @@ class UniversityFactory extends Factory
 
     public function definition(): array
     {
-        $name = fake()->unique()->company() . ' University';
-        $domain = Str::slug($name) . '.ac.id';
+        $name = fake()->unique()->company().' University';
+        $domain = Str::slug($name).'.ac.id';
 
         return [
             'name' => $name,

@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\DisputeController as AdminDisputeController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\ProductController;
@@ -85,15 +87,24 @@ Route::middleware('auth')->group(function () {
         Route::get('/chats/{conversation}', [ConversationController::class, 'show'])->name('chats.show');
         Route::post('/chats/{conversation}/messages', [ConversationController::class, 'storeMessage'])->name('chats.messages.store');
 
-        // Wishlist / Bookmark (SRS-017)
+        // Wishlist / Bookmark
         Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
         Route::post('/products/{product}/wishlist', [WishlistController::class, 'toggle'])->name('products.wishlist.toggle');
         Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
 
-        // Admin Management (SRS-011 & SRS-012)
+        // Dispute Resolution & Transaction Complaint Center
+        Route::get('/disputes', [DisputeController::class, 'index'])->name('disputes.index');
+        Route::get('/disputes/create', [DisputeController::class, 'create'])->name('disputes.create');
+        Route::post('/disputes', [DisputeController::class, 'store'])->name('disputes.store');
+        Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])->name('disputes.show');
+
+        // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::resource('categories', AdminCategoryController::class)->except(['show']);
             Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
+            Route::get('/disputes', [AdminDisputeController::class, 'index'])->name('disputes.index');
+            Route::get('/disputes/{dispute}', [AdminDisputeController::class, 'show'])->name('disputes.show');
+            Route::put('/disputes/{dispute}', [AdminDisputeController::class, 'update'])->name('disputes.update');
         });
     });
 });
