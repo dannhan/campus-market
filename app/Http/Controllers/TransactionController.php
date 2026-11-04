@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CheckoutTransactionRequest;
+use App\Http\Requests\ShipTransactionRequest;
 use App\Http\Requests\UploadPaymentProofRequest;
 use App\Models\Offer;
 use App\Models\Product;
@@ -23,6 +24,7 @@ class TransactionController extends Controller
         $user = $request->user();
         $statusFilter = $request->query('status');
         $methodFilter = $request->query('method');
+        $deliveryFilter = $request->query('delivery');
 
         $purchasesQuery = Transaction::query()
             ->where('buyer_id', $user->id)
@@ -44,14 +46,21 @@ class TransactionController extends Controller
             $salesQuery->where('payment_method', $methodFilter);
         }
 
+        if ($deliveryFilter && in_array($deliveryFilter, array_keys(Transaction::DELIVERY_METHODS), true)) {
+            $purchasesQuery->where('delivery_method', $deliveryFilter);
+            $salesQuery->where('delivery_method', $deliveryFilter);
+        }
+
         return view('transactions.index', [
             'purchases' => $purchasesQuery->paginate(10, ['*'], 'purchases_page')->withQueryString(),
             'sales' => $salesQuery->paginate(10, ['*'], 'sales_page')->withQueryString(),
             'statusFilter' => $statusFilter,
             'methodFilter' => $methodFilter,
+            'deliveryFilter' => $deliveryFilter,
             'paymentMethods' => Transaction::PAYMENT_METHODS,
             'bankChannels' => Transaction::BANK_CHANNELS,
             'ewalletChannels' => Transaction::EWALLET_CHANNELS,
+            'deliveryMethods' => Transaction::DELIVERY_METHODS,
         ]);
     }
 
@@ -91,6 +100,9 @@ class TransactionController extends Controller
             'paymentMethods' => Transaction::PAYMENT_METHODS,
             'bankChannels' => Transaction::BANK_CHANNELS,
             'ewalletChannels' => Transaction::EWALLET_CHANNELS,
+            'deliveryMethods' => Transaction::DELIVERY_METHODS,
+            'couriers' => Transaction::COURIERS,
+            'courierFee' => (float) ($product->courier_fee ?? 10000),
         ]);
     }
 
@@ -124,6 +136,18 @@ class TransactionController extends Controller
         $seller = $product->user;
         $paymentMethod = $request->validated('payment_method');
         $paymentChannel = $request->validated('payment_channel');
+        $deliveryMethod = $request->validated('delivery_method');
+
+        $shippingCost = $deliveryMethod === Transaction::DELIVERY_METHOD_COURIER
+            ? (float) ($product->courier_fee ?? 10000.00)
+            : 0.00;
+        $totalAmount = $price + $shippingCost;
+
+        $pickupLocation = null;
+        if ($deliveryMethod === Transaction::DELIVERY_METHOD_PICKUP) {
+            $pickupLocation = $request->validated('pickup_location')
+                ?: ($product->pickup_location ?: ($seller->preferred_pickup_location ?: 'Titik Pengambilan Kampus yang ditentukan penjual'));
+        }
 
         // Snapshot seller's payment details
         $paymentDetails = [
@@ -136,6 +160,7 @@ class TransactionController extends Controller
             'ewallet_account_number' => $seller->ewallet_account_number,
             'ewallet_account_name' => $seller->ewallet_account_name,
             'preferred_meeting_location' => $seller->preferred_meeting_location,
+            'preferred_pickup_location' => $seller->preferred_pickup_location,
         ];
 
         // For COD, the transaction starts in processing status (waiting for meetup)
@@ -143,13 +168,21 @@ class TransactionController extends Controller
             ? Transaction::STATUS_PROCESSING
             : Transaction::STATUS_PENDING;
 
-        $transaction = DB::transaction(function () use ($product, $offer, $user, $seller, $price, $paymentMethod, $paymentChannel, $request, $paymentDetails, $status) {
+        $transaction = DB::transaction(function () use ($product, $offer, $user, $seller, $price, $paymentMethod, $paymentChannel, $deliveryMethod, $shippingCost, $totalAmount, $pickupLocation, $request, $paymentDetails, $status) {
             $trx = Transaction::create([
                 'product_id' => $product->id,
                 'offer_id' => $offer?->id,
                 'buyer_id' => $user->id,
                 'seller_id' => $seller->id,
                 'amount' => $price,
+                'delivery_method' => $deliveryMethod,
+                'shipping_cost' => $shippingCost,
+                'total_amount' => $totalAmount,
+                'pickup_location' => $pickupLocation,
+                'shipping_recipient_name' => $request->validated('shipping_recipient_name'),
+                'shipping_phone' => $request->validated('shipping_phone'),
+                'shipping_address' => $request->validated('shipping_address'),
+                'courier_name' => $request->validated('courier_name'),
                 'payment_method' => $paymentMethod,
                 'payment_channel' => $paymentChannel,
                 'payment_status' => Transaction::PAYMENT_STATUS_PENDING,
@@ -235,6 +268,54 @@ class TransactionController extends Controller
     }
 
     /**
+     * Seller inputs courier tracking details and marks item as shipped.
+     */
+    public function ship(ShipTransactionRequest $request, Transaction $transaction): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($transaction->seller_id !== $user->id) {
+            abort(403, 'Hanya penjual yang dapat memperbarui informasi pengiriman barang.');
+        }
+
+        if (in_array($transaction->status, [Transaction::STATUS_COMPLETED, Transaction::STATUS_CANCELLED], true)) {
+            return back()->with('error', 'Status transaksi saat ini tidak mengizinkan pembaruan pengiriman.');
+        }
+
+        $transaction->update([
+            'courier_name' => $request->validated('courier_name') ?? $transaction->courier_name,
+            'tracking_number' => $request->validated('tracking_number'),
+            'seller_notes' => $request->validated('seller_notes') ?? $transaction->seller_notes,
+            'shipped_at' => now(),
+            'status' => Transaction::STATUS_PROCESSING,
+        ]);
+
+        return back()->with('status', 'Informasi pengiriman dan nomor resi berhasil disimpan.');
+    }
+
+    /**
+     * Buyer or seller marks that the item has been delivered or received.
+     */
+    public function markDelivered(Request $request, Transaction $transaction): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($transaction->buyer_id !== $user->id && $transaction->seller_id !== $user->id) {
+            abort(403, 'Anda tidak berhak memperbarui status penerimaan barang.');
+        }
+
+        if (in_array($transaction->status, [Transaction::STATUS_COMPLETED, Transaction::STATUS_CANCELLED], true)) {
+            return back()->with('error', 'Transaksi sudah selesai atau dibatalkan.');
+        }
+
+        $transaction->update([
+            'delivered_at' => now(),
+        ]);
+
+        return back()->with('status', 'Status pesanan berhasil diperbarui: barang telah diterima.');
+    }
+
+    /**
      * Seller confirms that the payment has been received.
      */
     public function confirm(Request $request, Transaction $transaction): RedirectResponse
@@ -253,6 +334,7 @@ class TransactionController extends Controller
             'payment_status' => Transaction::PAYMENT_STATUS_CONFIRMED,
             'status' => Transaction::STATUS_COMPLETED,
             'confirmed_at' => now(),
+            'delivered_at' => $transaction->delivered_at ?? now(),
         ]);
 
         return back()->with('status', 'Pembayaran berhasil diverifikasi. Transaksi jual-beli telah selesai.');

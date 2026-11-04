@@ -18,6 +18,42 @@ class Transaction extends Model
 
     public const PAYMENT_METHOD_EWALLET = 'e_wallet';
 
+    public const DELIVERY_METHOD_COD = 'cod';
+
+    public const DELIVERY_METHOD_PICKUP = 'pickup';
+
+    public const DELIVERY_METHOD_COURIER = 'courier';
+
+    public const DELIVERY_METHODS = [
+        self::DELIVERY_METHOD_COD => [
+            'name' => 'COD / Ketemu Langsung di Kampus',
+            'badge' => 'Gratis Biaya Kirim',
+            'description' => 'Bertemu langsung di area kampus (Perpustakaan, Kantin, Gedung Kuliah). Fleksibel & aman.',
+            'icon' => 'handshake',
+        ],
+        self::DELIVERY_METHOD_PICKUP => [
+            'name' => 'Pickup di Kampus / Ambil Sendiri',
+            'badge' => 'Bebas Ongkir (Rp 0)',
+            'description' => 'Ambil sendiri barang di titik lokasi kampus yang ditentukan penjual (Loker/Himpunan/Kantin).',
+            'icon' => 'building',
+        ],
+        self::DELIVERY_METHOD_COURIER => [
+            'name' => 'Pengiriman Kurir Ekspedisi',
+            'badge' => 'Antar ke Alamat Kos / Rumah',
+            'description' => 'Barang dikirim menggunakan jasa kurir pengiriman (J&T, JNE, SiCepat, GoSend, atau Kurir Kampus).',
+            'icon' => 'truck',
+        ],
+    ];
+
+    public const COURIERS = [
+        'jnt' => 'J&T Express',
+        'jne' => 'JNE Express',
+        'sicepat' => 'SiCepat Ekspres',
+        'gosend' => 'GoSend / GrabExpress (Instant Kampus)',
+        'kampus' => 'Kurir Mahasiswa Kampus',
+        'lainnya' => 'Ekspedisi Kurir Lainnya',
+    ];
+
     public const PAYMENT_METHODS = [
         self::PAYMENT_METHOD_COD => [
             'name' => 'Bayar Tunai di Kampus (COD)',
@@ -94,6 +130,15 @@ class Transaction extends Model
         'buyer_id',
         'seller_id',
         'amount',
+        'delivery_method',
+        'shipping_cost',
+        'total_amount',
+        'pickup_location',
+        'shipping_recipient_name',
+        'shipping_phone',
+        'shipping_address',
+        'courier_name',
+        'tracking_number',
         'payment_method',
         'payment_channel',
         'payment_status',
@@ -104,6 +149,8 @@ class Transaction extends Model
         'buyer_notes',
         'seller_notes',
         'paid_at',
+        'shipped_at',
+        'delivered_at',
         'confirmed_at',
         'cancelled_at',
     ];
@@ -112,8 +159,12 @@ class Transaction extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'shipping_cost' => 'decimal:2',
+            'total_amount' => 'decimal:2',
             'payment_details' => 'array',
             'paid_at' => 'datetime',
+            'shipped_at' => 'datetime',
+            'delivered_at' => 'datetime',
             'confirmed_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
@@ -159,6 +210,26 @@ class Transaction extends Model
     public function getFormattedAmountAttribute(): string
     {
         return 'Rp '.number_format((float) $this->amount, 0, ',', '.');
+    }
+
+    public function getFormattedShippingCostAttribute(): string
+    {
+        return 'Rp '.number_format((float) $this->shipping_cost, 0, ',', '.');
+    }
+
+    public function getFormattedTotalAmountAttribute(): string
+    {
+        return 'Rp '.number_format((float) $this->total_amount, 0, ',', '.');
+    }
+
+    public function getDeliveryMethodLabelAttribute(): string
+    {
+        return self::DELIVERY_METHODS[$this->delivery_method]['name'] ?? ucfirst($this->delivery_method);
+    }
+
+    public function getCourierNameLabelAttribute(): string
+    {
+        return self::COURIERS[$this->courier_name] ?? strtoupper($this->courier_name ?? '-');
     }
 
     public function getPaymentMethodLabelAttribute(): string

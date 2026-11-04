@@ -109,6 +109,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
         Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
         Route::post('/transactions/{transaction}/payment-proof', [TransactionController::class, 'uploadProof'])->name('transactions.proof');
+        Route::post('/transactions/{transaction}/ship', [TransactionController::class, 'ship'])->name('transactions.ship');
+        Route::post('/transactions/{transaction}/delivered', [TransactionController::class, 'markDelivered'])->name('transactions.delivered');
         Route::post('/transactions/{transaction}/confirm', [TransactionController::class, 'confirm'])->name('transactions.confirm');
         Route::post('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel'])->name('transactions.cancel');
 

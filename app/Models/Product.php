@@ -33,6 +33,9 @@ class Product extends Model
         'status',
         'location',
         'bargainable',
+        'delivery_methods',
+        'pickup_location',
+        'courier_fee',
         'views_count',
     ];
 
@@ -41,6 +44,8 @@ class Product extends Model
         return [
             'price' => 'decimal:2',
             'bargainable' => 'boolean',
+            'delivery_methods' => 'array',
+            'courier_fee' => 'decimal:2',
             'views_count' => 'integer',
         ];
     }
@@ -147,6 +152,21 @@ class Product extends Model
     public function getFormattedPriceAttribute(): string
     {
         return 'Rp '.number_format((float) $this->price, 0, ',', '.');
+    }
+
+    public function getFormattedCourierFeeAttribute(): string
+    {
+        return 'Rp '.number_format((float) ($this->courier_fee ?? 10000), 0, ',', '.');
+    }
+
+    public function getDeliveryMethodsListAttribute(): array
+    {
+        return $this->delivery_methods ?: ['cod', 'pickup', 'courier'];
+    }
+
+    public function supportsDeliveryMethod(string $method): bool
+    {
+        return in_array($method, $this->delivery_methods_list, true);
     }
 
     /**
