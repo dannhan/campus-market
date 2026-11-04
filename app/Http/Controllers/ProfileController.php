@@ -60,8 +60,13 @@ class ProfileController extends Controller
             $user->avatar = $avatarPath;
         }
 
-        // Update allowed display name
+        // Update allowed display name and student status
         $user->name = $request->validated('name');
+
+        if ($request->filled('student_status')) {
+            $user->student_status = $request->validated('student_status');
+        }
+
         $user->save();
 
         return redirect()->route('profile')->with('status', 'Profil berhasil diperbarui.');

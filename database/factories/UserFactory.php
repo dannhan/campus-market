@@ -23,6 +23,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'student_id' => null,
+            'student_status' => 'active',
             'avatar' => null,
             'seller_rating' => null,
             'buyer_rating' => null,
@@ -41,6 +42,16 @@ class UserFactory extends Factory
             'name' => $student->full_name,
             'email' => $student->university_email,
             'student_id' => $student->id,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an alumnus.
+     */
+    public function alumni(): static
+    {
+        return $this->state(fn () => [
+            'student_status' => 'alumni',
         ]);
     }
 
