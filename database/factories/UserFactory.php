@@ -22,6 +22,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'is_admin' => false,
             'student_id' => null,
             'student_status' => 'active',
             'avatar' => null,
@@ -42,6 +43,16 @@ class UserFactory extends Factory
             'name' => $student->full_name,
             'email' => $student->university_email,
             'student_id' => $student->id,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an administrator.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn () => [
+            'is_admin' => true,
         ]);
     }
 

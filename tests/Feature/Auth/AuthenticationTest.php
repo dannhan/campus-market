@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\University;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -13,7 +14,9 @@ class AuthenticationTest extends TestCase
     use RefreshDatabase;
 
     protected University $university;
+
     protected Student $student;
+
     protected User $user;
 
     protected function setUp(): void
@@ -64,6 +67,26 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('profile'));
     }
 
+    public function test_admin_user_can_authenticate_using_the_login_screen(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin CampusMarket',
+            'email' => 'admin@campusmarket.ac.id',
+            'password' => bcrypt('Password123!'),
+            'student_id' => null,
+            'is_admin' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => 'admin@campusmarket.ac.id',
+            'password' => 'Password123!',
+        ]);
+
+        $this->assertAuthenticatedAs($admin);
+        $response->assertRedirect(route('profile'));
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $response = $this->post('/login', [
@@ -84,7 +107,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertCookieNotExpired(\Illuminate\Support\Facades\Auth::getRecallerName());
+        $response->assertCookieNotExpired(Auth::getRecallerName());
     }
 
     public function test_unauthenticated_user_cannot_access_protected_profile(): void

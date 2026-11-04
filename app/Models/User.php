@@ -19,6 +19,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'is_admin',
         'student_id',
         'student_status',
         'email_verified_at',
@@ -30,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $attributes = [
+        'is_admin' => false,
         'student_status' => 'active',
     ];
 
@@ -41,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
+            'is_admin' => 'boolean',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'seller_rating' => 'decimal:2',
@@ -116,6 +119,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isStudent(): bool
     {
         return $this->student_id !== null && $this->student !== null;
+    }
+
+    /**
+     * Check if user has administrator privileges.
+     */
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
     }
 
     /**
