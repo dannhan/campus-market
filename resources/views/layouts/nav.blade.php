@@ -3,7 +3,7 @@
 @php($isSearch = in_array($route, ['products.index', 'products.show']))
 @php($isSell = in_array($route, ['products.create', 'products.edit']))
 @php($isChat = $route === 'chats.index' || str_starts_with((string) $route, 'chats.'))
-@php($isProfile = $route === 'profile' || str_starts_with((string) $route, 'profile.') || str_starts_with((string) $route, 'offers.') || str_starts_with((string) $route, 'wishlist.') || str_starts_with((string) $route, 'disputes.') || str_starts_with((string) $route, 'admin.'))
+@php($isProfile = $route === 'profile' || str_starts_with((string) $route, 'profile.') || str_starts_with((string) $route, 'offers.') || str_starts_with((string) $route, 'wishlist.') || str_starts_with((string) $route, 'disputes.') || str_starts_with((string) $route, 'transactions.') || str_starts_with((string) $route, 'admin.'))
 
 <!-- Bottom Navigation (Sprint 1 visual design; all five destinations are live, including Chat since SRS-016) -->
 <!-- Active tab is color-only on purpose: a bolder active label changes its width and shifts the neighbouring tabs. -->

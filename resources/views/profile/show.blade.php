@@ -218,7 +218,7 @@
             </div>
         </div>
 
-        <!-- Marketplace Activity (Sprint 2) -->
+        <!-- Marketplace Activity -->
         <a href="{{ route('offers.index') }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
@@ -229,6 +229,63 @@
                 <div class="flex-1">
                     <div class="text-xs font-bold text-slate-800">Tawaran Saya</div>
                     <div class="text-[11px] text-slate-400 font-medium">Kotak masuk negosiasi tawar-menawar</div>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- Transactions & Payments History -->
+        <a href="{{ route('transactions.index') }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800">Riwayat Transaksi & Pembayaran</span>
+                        @php
+                            $activeTrxCount = $user->purchases()->whereIn('status', ['pending', 'processing'])->count() + $user->sales()->whereIn('status', ['pending', 'processing'])->count();
+                        @endphp
+                        @if ($activeTrxCount > 0)
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                {{ $activeTrxCount }} aktif
+                            </span>
+                        @endif
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium">Daftar transaksi COD, transfer bank & e-wallet</div>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- Payment Settings (Bank & E-Wallet) -->
+        <a href="{{ route('profile.payments.edit') }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800">Rekening & E-Wallet Saya</span>
+                        @if ($user->hasPaymentSettings())
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                Sudah Diatur
+                            </span>
+                        @else
+                            <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                                Belum Lengkap
+                            </span>
+                        @endif
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium">Informasi rekening & e-wallet untuk menerima pembayaran</div>
                 </div>
                 <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

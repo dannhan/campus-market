@@ -102,6 +102,11 @@ class Product extends Model
         return $this->hasMany(Wishlist::class);
     }
 
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
     /**
      * Get the users who added this product to their wishlist.
      */
