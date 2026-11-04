@@ -23,6 +23,7 @@ class UpdatePaymentSettingsRequest extends FormRequest
             'ewallet_account_number' => ['nullable', 'string', 'max:50'],
             'ewallet_account_name' => ['nullable', 'string', 'max:100'],
             'preferred_meeting_location' => ['nullable', 'string', 'max:255'],
+            'preferred_pickup_location' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -36,6 +37,7 @@ class UpdatePaymentSettingsRequest extends FormRequest
             'ewallet_account_number.max' => 'Nomor e-wallet maksimal 50 karakter.',
             'ewallet_account_name.max' => 'Nama akun e-wallet maksimal 100 karakter.',
             'preferred_meeting_location.max' => 'Lokasi COD favorit maksimal 255 karakter.',
+            'preferred_pickup_location.max' => 'Titik pickup kampus favorit maksimal 255 karakter.',
         ];
     }
 }

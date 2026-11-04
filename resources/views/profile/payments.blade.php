@@ -171,11 +171,11 @@
                 </div>
             </div>
 
-            <!-- Section 3: COD Preference -->
+            <!-- Section 3: COD & Campus Pickup Preference -->
             <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3">
                 <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
-                    <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold">💵</span>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Preferensi Lokasi COD Kampus</h3>
+                    <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold">🏫</span>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Preferensi COD & Titik Pickup Kampus</h3>
                 </div>
 
                 <div>
@@ -186,14 +186,34 @@
                         type="text"
                         name="preferred_meeting_location"
                         id="preferred_meeting_location"
-                        placeholder="Contoh: Perpustakaan Pusat Undip, Kantin FT, Gazebo FSM"
+                        placeholder="Contoh: Perpustakaan Pusat, Kantin Fakultas, Gazebo Taman Kampus"
                         value="{{ old('preferred_meeting_location', $user->preferred_meeting_location) }}"
                         class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition"
                     >
                     <p class="text-[10px] text-slate-400 mt-1">
-                        Lokasi ini akan otomatis disarankan kepada calon pembeli saat memilih metode bayar tunai (COD).
+                        Lokasi pertemuan yang disarankan saat pembeli memilih COD / Ketemu Langsung.
                     </p>
                     @error('preferred_meeting_location')
+                        <p class="text-[11px] text-rose-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="preferred_pickup_location" class="block text-xs font-semibold text-slate-700 mb-1">
+                        Titik Pickup / Pengambilan Barang di Kampus
+                    </label>
+                    <input
+                        type="text"
+                        name="preferred_pickup_location"
+                        id="preferred_pickup_location"
+                        placeholder="Contoh: Loker Bersama Gedung A, Ruang Himpunan Mahasiswa, Pos Satpam Barat"
+                        value="{{ old('preferred_pickup_location', $user->preferred_pickup_location) }}"
+                        class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition"
+                    >
+                    <p class="text-[10px] text-slate-400 mt-1">
+                        Lokasi titik ambil mandiri jika pembeli memilih opsi Pickup di Kampus.
+                    </p>
+                    @error('preferred_pickup_location')
                         <p class="text-[11px] text-rose-500 mt-1">{{ $message }}</p>
                     @enderror
                 </div>

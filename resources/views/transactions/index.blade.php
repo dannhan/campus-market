@@ -47,31 +47,62 @@
         @endif
 
         <!-- Filter bar -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-            <a
-                href="{{ route('transactions.index') }}"
-                class="px-3 py-1.5 rounded-full border transition shrink-0 {{ empty($methodFilter) ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
-            >
-                Semua Metode
-            </a>
-            <a
-                href="{{ route('transactions.index', ['method' => 'cod']) }}"
-                class="px-3 py-1.5 rounded-full border transition shrink-0 {{ $methodFilter === 'cod' ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
-            >
-                💵 Tunai (COD)
-            </a>
-            <a
-                href="{{ route('transactions.index', ['method' => 'bank_transfer']) }}"
-                class="px-3 py-1.5 rounded-full border transition shrink-0 {{ $methodFilter === 'bank_transfer' ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
-            >
-                🏦 Transfer Bank
-            </a>
-            <a
-                href="{{ route('transactions.index', ['method' => 'e_wallet']) }}"
-                class="px-3 py-1.5 rounded-full border transition shrink-0 {{ $methodFilter === 'e_wallet' ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
-            >
-                📱 E-Wallet
-            </a>
+        <div class="space-y-2">
+            <!-- Payment Filter -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                <a
+                    href="{{ route('transactions.index', array_filter(['delivery' => $deliveryFilter])) }}"
+                    class="px-3 py-1.5 rounded-full border transition shrink-0 {{ empty($methodFilter) ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
+                >
+                    Semua Bayar
+                </a>
+                <a
+                    href="{{ route('transactions.index', array_filter(['method' => 'cod', 'delivery' => $deliveryFilter])) }}"
+                    class="px-3 py-1.5 rounded-full border transition shrink-0 {{ $methodFilter === 'cod' ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
+                >
+                    💵 Tunai (COD)
+                </a>
+                <a
+                    href="{{ route('transactions.index', array_filter(['method' => 'bank_transfer', 'delivery' => $deliveryFilter])) }}"
+                    class="px-3 py-1.5 rounded-full border transition shrink-0 {{ $methodFilter === 'bank_transfer' ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
+                >
+                    🏦 Transfer Bank
+                </a>
+                <a
+                    href="{{ route('transactions.index', array_filter(['method' => 'e_wallet', 'delivery' => $deliveryFilter])) }}"
+                    class="px-3 py-1.5 rounded-full border transition shrink-0 {{ $methodFilter === 'e_wallet' ? 'bg-teal-600 text-white border-teal-600 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300' }}"
+                >
+                    📱 E-Wallet
+                </a>
+            </div>
+
+            <!-- Delivery Filter -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                <a
+                    href="{{ route('transactions.index', array_filter(['method' => $methodFilter])) }}"
+                    class="px-2.5 py-1 rounded-lg border text-[11px] transition shrink-0 {{ empty($deliveryFilter) ? 'bg-slate-800 text-white border-slate-800 font-bold' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-white' }}"
+                >
+                    Semua Pengiriman
+                </a>
+                <a
+                    href="{{ route('transactions.index', array_filter(['delivery' => 'cod', 'method' => $methodFilter])) }}"
+                    class="px-2.5 py-1 rounded-lg border text-[11px] transition shrink-0 {{ $deliveryFilter === 'cod' ? 'bg-slate-800 text-white border-slate-800 font-bold' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-white' }}"
+                >
+                    🤝 COD
+                </a>
+                <a
+                    href="{{ route('transactions.index', array_filter(['delivery' => 'pickup', 'method' => $methodFilter])) }}"
+                    class="px-2.5 py-1 rounded-lg border text-[11px] transition shrink-0 {{ $deliveryFilter === 'pickup' ? 'bg-slate-800 text-white border-slate-800 font-bold' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-white' }}"
+                >
+                    🏫 Pickup Kampus
+                </a>
+                <a
+                    href="{{ route('transactions.index', array_filter(['delivery' => 'courier', 'method' => $methodFilter])) }}"
+                    class="px-2.5 py-1 rounded-lg border text-[11px] transition shrink-0 {{ $deliveryFilter === 'courier' ? 'bg-slate-800 text-white border-slate-800 font-bold' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-white' }}"
+                >
+                    🚚 Kurir
+                </a>
+            </div>
         </div>
 
         <!-- 1. Purchases Tab -->
@@ -99,10 +130,13 @@
                         <div class="min-w-0 flex-1">
                             <h2 class="text-xs font-bold text-slate-900 truncate">{{ $trx->product->title }}</h2>
                             <p class="text-[11px] text-slate-500 truncate">Penjual: {{ $trx->seller->name }}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-extrabold text-teal-700 font-mono">{{ $trx->formatted_amount }}</span>
-                                <span class="text-[10px] text-slate-400">·</span>
-                                <span class="text-[10px] text-slate-500 font-medium">
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="text-xs font-extrabold text-teal-700 font-mono">{{ $trx->formatted_total_amount }}</span>
+                                <span class="text-[10px] text-slate-300">·</span>
+                                <span class="text-[10px] text-slate-600 font-medium px-1.5 py-0.5 rounded bg-slate-100">
+                                    {{ $trx->delivery_method_label }}
+                                </span>
+                                <span class="text-[10px] text-slate-600 font-medium px-1.5 py-0.5 rounded bg-slate-100">
                                     {{ $trx->payment_method_label }}
                                 </span>
                             </div>
@@ -150,10 +184,13 @@
                         <div class="min-w-0 flex-1">
                             <h2 class="text-xs font-bold text-slate-900 truncate">{{ $trx->product->title }}</h2>
                             <p class="text-[11px] text-slate-500 truncate">Pembeli: {{ $trx->buyer->name }}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-extrabold text-teal-700 font-mono">{{ $trx->formatted_amount }}</span>
-                                <span class="text-[10px] text-slate-400">·</span>
-                                <span class="text-[10px] text-slate-500 font-medium">
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="text-xs font-extrabold text-teal-700 font-mono">{{ $trx->formatted_total_amount }}</span>
+                                <span class="text-[10px] text-slate-300">·</span>
+                                <span class="text-[10px] text-slate-600 font-medium px-1.5 py-0.5 rounded bg-slate-100">
+                                    {{ $trx->delivery_method_label }}
+                                </span>
+                                <span class="text-[10px] text-slate-600 font-medium px-1.5 py-0.5 rounded bg-slate-100">
                                     {{ $trx->payment_method_label }}
                                 </span>
                             </div>
@@ -178,4 +215,3 @@
     </div>
 </div>
 @endsection
-

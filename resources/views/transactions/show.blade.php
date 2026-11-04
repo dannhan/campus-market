@@ -3,10 +3,16 @@
 @section('content')
 <div class="flex flex-col flex-1 pb-12" x-data="{
     copied: false,
+    copiedResi: false,
     copyText(text) {
         navigator.clipboard.writeText(text);
         this.copied = true;
         setTimeout(() => this.copied = false, 2500);
+    },
+    copyResi(text) {
+        navigator.clipboard.writeText(text);
+        this.copiedResi = true;
+        setTimeout(() => this.copiedResi = false, 2500);
     }
 }">
     <!-- Header -->
@@ -53,7 +59,7 @@
         @endphp
 
         <!-- Status Card -->
-        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-2">
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-2.5">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Transaksi</span>
                 <span class="text-xs font-bold px-3 py-1 rounded-full border {{ $statusBadgeClass }}">
@@ -62,6 +68,19 @@
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                <span class="text-slate-500">Metode Pengiriman:</span>
+                <span class="font-bold text-slate-800 flex items-center gap-1">
+                    @if ($transaction->delivery_method === 'cod')
+                        <span>🤝 COD / Ketemu Langsung</span>
+                    @elseif ($transaction->delivery_method === 'pickup')
+                        <span>🏫 Pickup di Kampus</span>
+                    @else
+                        <span>🚚 Kurir ({{ $transaction->courier_name_label }})</span>
+                    @endif
+                </span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-500">Metode Pembayaran:</span>
                 <span class="font-bold text-slate-800 flex items-center gap-1">
                     @if ($transaction->payment_method === 'cod')
@@ -73,41 +92,193 @@
                     @endif
                 </span>
             </div>
+
             <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-500">Waktu Pemesanan:</span>
                 <span class="text-slate-700 font-mono text-[11px]">{{ $transaction->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
             </div>
         </div>
 
-        <!-- 1. COD Details (if method is COD) -->
+        <!-- Delivery Details Section -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                        @if ($transaction->delivery_method === 'cod') 🤝 @elseif ($transaction->delivery_method === 'pickup') 🏫 @else 🚚 @endif
+                    </span>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-950">
+                        Informasi Pengiriman & Penyerahan
+                    </h3>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {{ $transaction->delivery_method_label }}
+                </span>
+            </div>
+
+            @if ($transaction->delivery_method === 'cod')
+                <!-- COD Meeting Spot Details -->
+                <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1.5 text-xs">
+                    <span class="text-[10px] font-bold text-emerald-800 uppercase block">Lokasi Janji Temu COD di Kampus:</span>
+                    <p class="font-bold text-slate-900 text-xs">{{ $transaction->meeting_location ?? 'Area kampus yang disepakati bersama' }}</p>
+                    <p class="text-[11px] text-emerald-700 leading-relaxed pt-1">
+                        Silakan hubungi lawan transaksi via chat untuk menyepakati hari dan jam temu serah terima barang.
+                    </p>
+                </div>
+
+            @elseif ($transaction->delivery_method === 'pickup')
+                <!-- Campus Pickup Details -->
+                <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5 text-xs">
+                    <span class="text-[10px] font-bold text-amber-800 uppercase block">Titik Pengambilan di Kampus (Pickup):</span>
+                    <p class="font-bold text-slate-900 text-xs">{{ $transaction->pickup_location ?? 'Titik kampus yang ditentukan penjual' }}</p>
+                    <p class="text-[11px] text-amber-800 leading-relaxed pt-1">
+                        Pembeli dapat mengambil barang secara mandiri di lokasi kampus yang tertera di atas sesuai jam operasional atau kesepakatan bersama.
+                    </p>
+                </div>
+
+            @else
+                <!-- Courier Delivery Details -->
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-[10px] font-semibold text-slate-400 block uppercase">Kurir Ekspedisi</span>
+                            <span class="font-bold text-slate-800 mt-0.5 block">{{ $transaction->courier_name_label }}</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="text-[10px] font-semibold text-slate-400 block uppercase">Ongkos Kirim</span>
+                            <span class="font-bold font-mono text-slate-800 mt-0.5 block">{{ $transaction->formatted_shipping_cost }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Tracking Number Display -->
+                    <div class="p-3 bg-blue-50/80 border border-blue-200 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-blue-900 uppercase">Nomor Resi Pengiriman:</span>
+                            @if ($transaction->shipped_at)
+                                <span class="text-[10px] text-blue-700 font-mono">Dikirim: {{ $transaction->shipped_at->translatedFormat('d M, H:i') }} WIB</span>
+                            @endif
+                        </div>
+
+                        @if ($transaction->tracking_number)
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-blue-200">
+                                <span class="font-mono text-sm font-extrabold text-blue-900 tracking-wider">
+                                    {{ $transaction->tracking_number }}
+                                </span>
+                                <button
+                                    type="button"
+                                    @click="copyResi('{{ $transaction->tracking_number }}')"
+                                    class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 text-[11px] font-semibold rounded-md border border-blue-200 transition flex items-center gap-1"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                    <span x-text="copiedResi ? 'Tersalin!' : 'Salin Resi'"></span>
+                                </button>
+                            </div>
+                        @else
+                            <p class="text-xs text-blue-800">
+                                Penjual sedang menyiapkan barang. Nomor resi pengiriman akan tertera di sini setelah paket diserahkan ke kurir.
+                            </p>
+                        @endif
+                    </div>
+
+                    <!-- Shipping Address Details -->
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1 text-xs">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Alamat Tujuan Pengiriman:</span>
+                        <div class="font-bold text-slate-800">{{ $transaction->shipping_recipient_name ?? $transaction->buyer->name }} ({{ $transaction->shipping_phone ?? '-' }})</div>
+                        <p class="text-slate-600 text-[11px] leading-relaxed whitespace-pre-line mt-0.5">{{ $transaction->shipping_address ?? 'Alamat kos/tempat tinggal pembeli' }}</p>
+                    </div>
+
+                    <!-- Seller Resi Input / Update Form -->
+                    @if ($isSeller && $transaction->status !== 'completed' && $transaction->status !== 'cancelled')
+                        <form method="POST" action="{{ route('transactions.ship', $transaction) }}" class="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-2.5">
+                            @csrf
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-950">
+                                <svg class="w-4 h-4 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span>Perbarui Resi Pengiriman (Sebagai Penjual)</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-1">Kurir</label>
+                                    <select name="courier_name" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                        @foreach (\App\Models\Transaction::COURIERS as $ckey => $cname)
+                                            <option value="{{ $ckey }}" @selected($transaction->courier_name === $ckey)>{{ $cname }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-600 mb-1">Nomor Resi <span class="text-rose-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        name="tracking_number"
+                                        placeholder="Nomor resi paket"
+                                        value="{{ old('tracking_number', $transaction->tracking_number) }}"
+                                        required
+                                        class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    >
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-2xs transition"
+                            >
+                                Simpan Nomor Resi Pengiriman
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
+            <!-- Delivered Confirmation Status -->
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span class="text-slate-500">Penerimaan Barang:</span>
+                @if ($transaction->delivered_at)
+                    <span class="text-emerald-700 font-semibold flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Diterima ({{ $transaction->delivered_at->translatedFormat('d M, H:i') }} WIB)</span>
+                    </span>
+                @else
+                    <span class="text-amber-700 font-semibold">Dalam Proses Pengiriman / Penyerahan</span>
+                @endif
+            </div>
+
+            @if (! $transaction->delivered_at && $transaction->status !== 'cancelled' && $transaction->status !== 'pending')
+                <!-- Mark Delivered Action -->
+                <form method="POST" action="{{ route('transactions.delivered', $transaction) }}">
+                    @csrf
+                    <button
+                        type="submit"
+                        onclick="return confirm('Konfirmasi bahwa barang sudah diterima dengan baik?')"
+                        class="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5"
+                    >
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Konfirmasi Barang Sudah Diterima</span>
+                    </button>
+                </form>
+            @endif
+        </div>
+
+        <!-- Payment Details Section -->
         @if ($transaction->payment_method === 'cod')
             <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 shadow-xs space-y-2.5">
                 <div class="flex items-center gap-2">
                     <span class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">💵</span>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-900">Petunjuk Pembayaran Tunai (COD Kampus)</h3>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-900">Petunjuk Pembayaran Tunai (COD)</h3>
                 </div>
 
                 <div class="text-xs text-emerald-950 space-y-2 pt-1 leading-relaxed">
                     <div class="p-2.5 bg-white/80 rounded-xl border border-emerald-200">
-                        <span class="text-[10px] font-bold text-emerald-700 uppercase block">Lokasi Janji Temu di Kampus:</span>
-                        <div class="text-xs font-bold text-slate-900 mt-0.5">{{ $transaction->meeting_location ?? 'Area kampus yang disepakati bersama' }}</div>
-                    </div>
-
-                    <div class="p-2.5 bg-white/80 rounded-xl border border-emerald-200">
-                        <span class="text-[10px] font-bold text-emerald-700 uppercase block">Nominal Pembayaran Tunai Pas:</span>
-                        <div class="text-base font-extrabold text-teal-700 font-mono">{{ $transaction->formatted_amount }}</div>
+                        <span class="text-[10px] font-bold text-emerald-700 uppercase block">Total Bayar Tunai Pas:</span>
+                        <div class="text-base font-extrabold text-teal-700 font-mono">{{ $transaction->formatted_total_amount }}</div>
                     </div>
 
                     <div class="text-[11px] text-emerald-800 flex items-start gap-1.5 pt-1">
                         <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Tips Aman Mahasiswa: Periksa kondisi fisik barang secara teliti saat bertemu sebelum menyerahkan uang tunai kepada penjual.</span>
+                        <span>Tips Mahasiswa: Selalu periksa kondisi fisik barang secara teliti sebelum menyerahkan uang tunai kepada penjual.</span>
                     </div>
                 </div>
             </div>
-        @endif
-
-        <!-- 2. Bank Transfer / E-Wallet Destination Account -->
-        @if (in_array($transaction->payment_method, ['bank_transfer', 'e_wallet'], true))
+        @else
+            <!-- Bank Transfer / E-Wallet Destination Account -->
             @php
                 $details = $transaction->payment_details ?? [];
                 $accNumber = $transaction->payment_method === 'bank_transfer'
@@ -163,8 +334,8 @@
                     </div>
 
                     <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-500">Jumlah Transfer:</span>
-                        <strong class="text-teal-700 font-mono text-sm">{{ $transaction->formatted_amount }}</strong>
+                        <span class="text-slate-500">Total Pembayaran:</span>
+                        <strong class="text-teal-700 font-mono text-sm">{{ $transaction->formatted_total_amount }}</strong>
                     </div>
                 </div>
 
@@ -220,9 +391,9 @@
             </div>
         @endif
 
-        <!-- Product Card -->
+        <!-- Product & Price Breakdown Card -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Barang Transaksi</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Barang Transaksi & Tagihan</h3>
 
             <div class="flex items-center gap-3">
                 <img src="{{ $transaction->product->cover_image_url }}" alt="{{ $transaction->product->title }}" class="w-14 h-14 rounded-xl object-cover border border-slate-100 shrink-0">
@@ -231,9 +402,27 @@
                         {{ $transaction->product->title }}
                     </a>
                     <span class="text-[10px] text-slate-500 block truncate">{{ $transaction->product->category->name ?? 'Kategori' }}</span>
-                    <span class="text-xs font-extrabold text-teal-700 mt-1 block font-mono">
+                    <span class="text-xs font-bold text-slate-700 mt-1 block font-mono">
                         {{ $transaction->formatted_amount }}
                     </span>
+                </div>
+            </div>
+
+            <!-- Detailed Breakdown -->
+            <div class="pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                <div class="flex justify-between">
+                    <span>Subtotal Produk:</span>
+                    <span class="font-mono">{{ $transaction->formatted_amount }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Biaya Pengiriman ({{ $transaction->delivery_method_label }}):</span>
+                    <span class="font-mono {{ $transaction->shipping_cost > 0 ? 'text-slate-900' : 'text-emerald-600' }}">
+                        {{ $transaction->shipping_cost > 0 ? $transaction->formatted_shipping_cost : 'Rp 0 (Gratis)' }}
+                    </span>
+                </div>
+                <div class="flex justify-between pt-1.5 border-t border-slate-100 font-bold text-slate-900 text-sm">
+                    <span>Total Tagihan:</span>
+                    <span class="font-mono text-teal-700 font-extrabold text-base">{{ $transaction->formatted_total_amount }}</span>
                 </div>
             </div>
 
@@ -278,7 +467,7 @@
                         class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        <span>Konfirmasi Pembayaran Diterima (Selesaikan Transaksi)</span>
+                        <span>Konfirmasi Selesai & Pembayaran Diterima</span>
                     </button>
                 </form>
             @endif
@@ -321,4 +510,3 @@
     </div>
 </div>
 @endsection
-

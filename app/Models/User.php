@@ -35,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'ewallet_account_number',
         'ewallet_account_name',
         'preferred_meeting_location',
+        'preferred_pickup_location',
     ];
 
     protected $attributes = [
