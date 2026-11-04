@@ -102,6 +102,7 @@ class DatabaseStudentVerificationProvider implements StudentVerificationProvider
 
         // Levenshtein / similar_text for minor typo tolerance if names are long enough
         similar_text($cleanInput, $cleanRegistry, $percent);
+
         return $percent >= 85.0;
     }
 }

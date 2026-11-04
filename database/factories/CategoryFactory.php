@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Category>
@@ -27,9 +28,9 @@ class CategoryFactory extends Factory
 
         return [
             'name' => $name,
-            'slug' => \Illuminate\Support\Str::slug($name),
+            'slug' => Str::slug($name),
             'icon' => fake()->randomElement(['book-open', 'beaker', 'device-phone', 'briefcase', 'pencil', 'shirt', 'cpu', 'cake']),
-            'description' => 'Kategori ' . $name . ' untuk mahasiswa.',
+            'description' => 'Kategori '.$name.' untuk mahasiswa.',
             'sort_order' => fake()->numberBetween(0, 99),
         ];
     }

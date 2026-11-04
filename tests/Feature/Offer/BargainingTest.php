@@ -16,10 +16,15 @@ class BargainingTest extends TestCase
     use RefreshDatabase;
 
     protected University $university;
+
     protected User $seller;
+
     protected User $buyer;
+
     protected User $otherBuyer;
+
     protected Category $category;
+
     protected Product $product;
 
     protected function setUp(): void

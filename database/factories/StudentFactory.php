@@ -37,7 +37,8 @@ class StudentFactory extends Factory
             'university_email' => function (array $attributes) use ($username) {
                 $univ = University::find($attributes['university_id']);
                 $domain = $univ ? $univ->email_domain : 'students.example.ac.id';
-                return $username . '_' . fake()->numerify('###') . '@' . $domain;
+
+                return $username.'_'.fake()->numerify('###').'@'.$domain;
             },
             'is_active' => true,
         ];

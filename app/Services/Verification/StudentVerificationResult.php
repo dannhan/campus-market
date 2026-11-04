@@ -60,6 +60,7 @@ class StudentVerificationResult
         }
 
         $first = reset($this->errors);
+
         return is_array($first) ? ($first[0] ?? $this->message) : $first;
     }
 

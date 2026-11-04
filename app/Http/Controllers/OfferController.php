@@ -13,9 +13,7 @@ use Illuminate\View\View;
 
 class OfferController extends Controller
 {
-    public function __construct(protected OfferService $offers)
-    {
-    }
+    public function __construct(protected OfferService $offers) {}
 
     /**
      * List the user's bargaining inbox: offers received on own products and offers sent.

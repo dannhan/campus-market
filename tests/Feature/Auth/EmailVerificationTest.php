@@ -16,7 +16,9 @@ class EmailVerificationTest extends TestCase
     use RefreshDatabase;
 
     protected University $university;
+
     protected Student $student;
+
     protected User $user;
 
     protected function setUp(): void
