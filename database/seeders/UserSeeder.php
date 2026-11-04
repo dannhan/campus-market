@@ -64,5 +64,21 @@ class UserSeeder extends Seeder
                 ]
             );
         }
+
+        // 4. Admin CampusMarket (SRS-011)
+        User::updateOrCreate(
+            ['email' => 'admin@campusmarket.ac.id'],
+            [
+                'name' => 'Admin CampusMarket',
+                'password' => Hash::make('Password123!'),
+                'student_id' => null,
+                'is_admin' => true,
+                'email_verified_at' => now(),
+                'seller_rating' => null,
+                'buyer_rating' => null,
+                'seller_review_count' => 0,
+                'buyer_review_count' => 0,
+            ]
+        );
     }
 }

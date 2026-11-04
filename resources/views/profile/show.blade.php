@@ -38,6 +38,11 @@
             <!-- Name & Badge -->
             <h2 class="text-lg font-bold text-slate-900 leading-tight">{{ $user->name }}</h2>
             <div class="flex flex-wrap items-center justify-center gap-1.5 mt-2">
+                @if ($user->isAdmin())
+                    <div class="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-[11px] font-bold shadow-2xs">
+                        <span>★ Administrator</span>
+                    </div>
+                @endif
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-100/80 text-teal-800 rounded-full text-[11px] font-semibold">
                     <svg class="w-3.5 h-3.5 text-teal-700" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
@@ -70,6 +75,35 @@
                 </a>
             </div>
         </div>
+
+        @if ($user->isAdmin())
+            <!-- Admin Panel Section (SRS-011) -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs font-bold">
+                            ★
+                        </span>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-amber-900">Administrator Panel</h2>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900">Admin</span>
+                </div>
+                <p class="text-[11px] text-amber-800 leading-relaxed mb-3">
+                    Anda memiliki hak akses administrator untuk mengelola konten dan kategori platform.
+                </p>
+                <a href="{{ route('admin.categories.index') }}" class="w-full py-2.5 px-3 bg-white border border-amber-300 hover:bg-amber-100/50 text-amber-900 font-bold rounded-xl text-xs flex items-center justify-between transition shadow-xs">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                        <span>Kelola Kategori Produk (SRS-011)</span>
+                    </span>
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        @endif
 
         <!-- Academic Information Card -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">

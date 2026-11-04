@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EmailVerificationController;
@@ -87,6 +88,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
         Route::post('/products/{product}/wishlist', [WishlistController::class, 'toggle'])->name('products.wishlist.toggle');
         Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+
+        // Admin Product Category Management (SRS-011)
+        Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+            Route::resource('categories', AdminCategoryController::class)->except(['show']);
+        });
     });
 });
 

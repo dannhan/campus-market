@@ -129,6 +129,7 @@
         <div class="bg-teal-50/50 border border-teal-100 rounded-xl p-3 text-[11px] text-slate-600 leading-relaxed">
             <span class="font-semibold text-teal-800">Akun Pengujian Demo:</span>
             <div class="mt-1 font-mono text-[10px] text-slate-700 space-y-0.5">
+                <div>• Administrator: <span class="text-amber-800 font-bold">admin@campusmarket.ac.id</span> / <span class="text-slate-800">Password123!</span></div>
                 <div>• Terverifikasi: <span class="text-teal-700 font-bold">budi.santoso@students.undip.ac.id</span> / <span class="text-slate-800">Password123!</span></div>
                 <div>• Belum Verifikasi: <span class="text-teal-700 font-bold">siti.rahmawati@students.undip.ac.id</span> / <span class="text-slate-800">Password123!</span></div>
             </div>
