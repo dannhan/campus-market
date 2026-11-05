@@ -84,9 +84,11 @@ class ProductController extends Controller
      */
     public function show(Request $request, Product $product): View
     {
-        $isOwner = $request->user()?->id === $product->user_id;
+        $user = $request->user();
+        $isOwner = $user?->id === $product->user_id;
+        $isAdmin = $user?->isAdmin() ?? false;
 
-        if ($product->status !== 'active' && ! $isOwner) {
+        if (($product->status !== 'active' || $product->isRejected()) && ! $isOwner && ! $isAdmin) {
             abort(404);
         }
 
