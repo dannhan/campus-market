@@ -12,6 +12,7 @@ use App\Http\Controllers\OfferController;
 use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ShippingRateController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WishlistController;
@@ -117,6 +118,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/transactions/{transaction}/delivered', [TransactionController::class, 'markDelivered'])->name('transactions.delivered');
         Route::post('/transactions/{transaction}/confirm', [TransactionController::class, 'confirm'])->name('transactions.confirm');
         Route::post('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel'])->name('transactions.cancel');
+        Route::post('/transactions/{transaction}/reviews', [ReviewController::class, 'store'])->name('transactions.reviews.store');
+        Route::get('/users/{user}/reviews', [ReviewController::class, 'userReviews'])->name('users.reviews');
 
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

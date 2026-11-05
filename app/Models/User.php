@@ -218,6 +218,50 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Transaction::class, 'seller_id');
     }
 
+    public function reviewsGiven(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
+
+    public function reviewsReceived(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewee_id');
+    }
+
+    public function sellerReviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewee_id')->where('type', Review::TYPE_SELLER_REVIEW);
+    }
+
+    public function buyerReviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewee_id')->where('type', Review::TYPE_BUYER_REVIEW);
+    }
+
+    /**
+     * Recalculate and update the aggregated seller and buyer ratings.
+     */
+    public function recalculateRatings(): void
+    {
+        $sellerStats = $this->reviewsReceived()
+            ->where('type', Review::TYPE_SELLER_REVIEW)
+            ->selectRaw('COUNT(*) as total, AVG(rating) as avg_rating')
+            ->first();
+
+        $this->seller_review_count = (int) ($sellerStats->total ?? 0);
+        $this->seller_rating = $this->seller_review_count > 0 ? round((float) $sellerStats->avg_rating, 2) : null;
+
+        $buyerStats = $this->reviewsReceived()
+            ->where('type', Review::TYPE_BUYER_REVIEW)
+            ->selectRaw('COUNT(*) as total, AVG(rating) as avg_rating')
+            ->first();
+
+        $this->buyer_review_count = (int) ($buyerStats->total ?? 0);
+        $this->buyer_rating = $this->buyer_review_count > 0 ? round((float) $buyerStats->avg_rating, 2) : null;
+
+        $this->saveQuietly();
+    }
+
     public function hasPaymentSettings(): bool
     {
         return ! empty($this->bank_account_number) || ! empty($this->ewallet_account_number) || ! empty($this->preferred_meeting_location);

@@ -475,6 +475,253 @@
             @endif
         </div>
 
+        @php
+            $currentUser = auth()->user();
+            $myReview = $transaction->getReviewBy($currentUser);
+            $counterpartyReview = $transaction->getReviewFor($currentUser);
+            $counterparty = $isBuyer ? $transaction->seller : $transaction->buyer;
+            $counterpartyRole = $isBuyer ? 'Penjual' : 'Pembeli';
+        @endphp
+
+        <!-- Rating & Review Section (Active on Completed Transactions) -->
+        @if ($transaction->status === \App\Models\Transaction::STATUS_COMPLETED)
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-4" id="rating-review-section">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                            <svg class="w-4 h-4 fill-amber-400 stroke-amber-500" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-900">Rating & Ulasan</h3>
+                            <p class="text-[10px] text-slate-500">Penilaian dua arah untuk transparansi & reputasi mahasiswa</p>
+                        </div>
+                    </div>
+
+                    @if ($counterparty)
+                        <a href="{{ route('users.reviews', $counterparty) }}" class="text-[11px] font-semibold text-teal-700 hover:text-teal-800 hover:underline inline-flex items-center gap-1">
+                            <span>Profil {{ $counterpartyRole }}</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    @endif
+                </div>
+
+                @if (session('success'))
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl flex items-center gap-2">
+                        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>{{ session('error') }}</span>
+                    </div>
+                @endif
+                @if ($errors->any())
+                    <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl">
+                        <ul class="list-disc list-inside space-y-0.5">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                {{-- 1. My Review Form or Display --}}
+                <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-3">
+                    @if ($myReview)
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full uppercase tracking-wider inline-block">Ulasan Anda</span>
+                                <h4 class="text-xs font-semibold text-slate-800 mt-1">Ulasan untuk {{ $counterpartyRole }}: {{ $counterparty?->name }}</h4>
+                            </div>
+                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-800 shadow-2xs">
+                                <svg class="w-4 h-4 fill-amber-400 stroke-amber-400" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                                <span>{{ $myReview->rating }}/5</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1">
+                            @for ($s = 1; $s <= 5; $s++)
+                                <svg class="w-4 h-4 {{ $s <= $myReview->rating ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200' }}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                            @endfor
+                            <span class="text-[11px] text-slate-500 ml-1.5">({{ $myReview->rating_label }})</span>
+                        </div>
+
+                        @if ($myReview->tags && count($myReview->tags) > 0)
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach ($myReview->tags as $tag)
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-white border border-slate-200 text-teal-800 px-2 py-0.5 rounded-full shadow-2xs">
+                                        <svg class="w-3 h-3 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        {{ $tag }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if ($myReview->comment)
+                            <div class="bg-white p-2.5 rounded-lg border border-slate-200/80 text-xs text-slate-700 italic">
+                                "{{ $myReview->comment }}"
+                            </div>
+                        @endif
+
+                        <div class="text-[10px] text-slate-400">
+                            Dikirim pada {{ $myReview->created_at->translatedFormat('d M Y, H:i') }}
+                        </div>
+                    @elseif ($transaction->canBeReviewedBy($currentUser))
+                        <div x-data="{
+                            rating: 5,
+                            hoveredRating: 0,
+                            selectedTags: [],
+                            labels: {
+                                1: 'Sangat Kecewa',
+                                2: 'Kurang Puas',
+                                3: 'Cukup',
+                                4: 'Puas',
+                                5: 'Sangat Puas!'
+                            },
+                            toggleTag(tag) {
+                                if (this.selectedTags.includes(tag)) {
+                                    this.selectedTags = this.selectedTags.filter(t => t !== tag);
+                                } else {
+                                    if (this.selectedTags.length < 5) {
+                                        this.selectedTags.push(tag);
+                                    }
+                                }
+                            }
+                        }">
+                            <form action="{{ route('transactions.reviews.store', $transaction) }}" method="POST" class="space-y-3">
+                                @csrf
+
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-900">Beri Ulasan untuk {{ $counterpartyRole }}</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Bagikan pengalaman bertransaksi dengan <strong>{{ $counterparty?->name }}</strong></p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Rating Bintang *</label>
+                                    <input type="hidden" name="rating" :value="rating">
+                                    <div class="flex items-center gap-1.5">
+                                        <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                                            <button
+                                                type="button"
+                                                @click="rating = star"
+                                                @mouseenter="hoveredRating = star"
+                                                @mouseleave="hoveredRating = 0"
+                                                class="p-1 focus:outline-none transition transform hover:scale-110 active:scale-95"
+                                            >
+                                                <svg
+                                                    class="w-7 h-7 cursor-pointer transition-colors"
+                                                    :class="(hoveredRating ? star <= hoveredRating : star <= rating) ? 'fill-amber-400 text-amber-400 drop-shadow-xs' : 'fill-slate-200 text-slate-300'"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <span class="text-xs font-bold text-amber-600 ml-2" x-text="labels[hoveredRating || rating]"></span>
+                                    </div>
+                                </div>
+
+                                @php
+                                    $availableTags = $isBuyer ? \App\Models\Review::SELLER_TAGS : \App\Models\Review::BUYER_TAGS;
+                                @endphp
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tag Pengalaman (Opsional)</label>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach ($availableTags as $tag)
+                                            <label
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition border select-none"
+                                                :class="selectedTags.includes('{{ $tag }}') ? 'bg-teal-600 text-white border-teal-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400'"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    name="tags[]"
+                                                    value="{{ $tag }}"
+                                                    class="sr-only"
+                                                    @change="toggleTag('{{ $tag }}')"
+                                                >
+                                                <span x-text="selectedTags.includes('{{ $tag }}') ? '✓' : '+'" class="text-[10px]"></span>
+                                                <span>{{ $tag }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="review-comment" class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Ulasan Tertulis (Opsional)</label>
+                                    <textarea
+                                        id="review-comment"
+                                        name="comment"
+                                        rows="2"
+                                        maxlength="1000"
+                                        placeholder="Tulis ulasanmu secara jujur dan membangun untuk membantu mahasiswa lainnya..."
+                                        class="w-full text-xs rounded-xl border border-slate-200 px-3 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition resize-none"
+                                    ></textarea>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-xs"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                    <span>Kirim Ulasan & Rating</span>
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="text-xs text-slate-500 italic">
+                            Anda tidak memiliki akses untuk memberikan ulasan pada transaksi ini.
+                        </div>
+                    @endif
+                </div>
+
+                {{-- 2. Counterparty's Review Display --}}
+                <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ulasan Balik dari {{ $counterpartyRole }}</span>
+                        @if ($counterpartyReview)
+                            <span class="text-[10px] text-slate-400">{{ $counterpartyReview->created_at->diffForHumans() }}</span>
+                        @endif
+                    </div>
+
+                    @if ($counterpartyReview)
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-0.5">
+                                @for ($s = 1; $s <= 5; $s++)
+                                    <svg class="w-3.5 h-3.5 {{ $s <= $counterpartyReview->rating ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200' }}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                                @endfor
+                            </div>
+                            <span class="text-xs font-bold text-slate-800">{{ $counterpartyReview->rating }}/5</span>
+                            <span class="text-[11px] text-slate-500">({{ $counterpartyReview->rating_label }})</span>
+                        </div>
+
+                        @if ($counterpartyReview->tags && count($counterpartyReview->tags) > 0)
+                            <div class="flex flex-wrap gap-1">
+                                @foreach ($counterpartyReview->tags as $tag)
+                                    <span class="text-[10px] font-medium bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded-full">
+                                        {{ $tag }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if ($counterpartyReview->comment)
+                            <p class="text-xs text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200/80 italic">
+                                "{{ $counterpartyReview->comment }}"
+                            </p>
+                        @endif
+                    @else
+                        <p class="text-xs text-slate-400 italic">
+                            {{ $counterparty?->name ?? $counterpartyRole }} belum menuliskan ulasan balik untuk transaksi ini.
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <!-- Counterparties Card -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3">
             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Pihak Transaksi</h3>

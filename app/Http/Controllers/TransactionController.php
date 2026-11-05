@@ -306,6 +306,7 @@ class TransactionController extends Controller
             'destinationUniversity',
             'offer',
             'escrowPayment.verifier',
+            'reviews.reviewer.student.university',
         ]);
 
         return view('transactions.show', [
