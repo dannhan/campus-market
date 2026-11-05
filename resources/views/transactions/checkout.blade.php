@@ -45,6 +45,7 @@
         <input type="hidden" name="payment_method" :value="method">
         <input type="hidden" name="payment_channel" :value="channel">
         <input type="hidden" name="delivery_method" :value="deliveryMethod">
+        <input type="hidden" name="use_escrow" :value="method !== 'cod' ? '1' : '0'">
 
         <!-- Product Summary Card -->
         <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
@@ -309,8 +310,24 @@
                 <h3 class="text-xs font-bold uppercase tracking-wider">Metode Pembayaran Mahasiswa</h3>
             </div>
             <p class="text-[11px] text-teal-100 leading-relaxed">
-                Pilih opsi pembayaran yang paling fleksibel & hemat untuk kantong mahasiswa: bayar tunai COD di kampus, transfer bank, atau e-wallet instan.
+                Pilih opsi pembayaran yang paling fleksibel & hemat untuk kantong mahasiswa: bayar tunai COD di kampus, transfer bank, atau e-wallet instan dengan proteksi rekening bersama.
             </p>
+        </div>
+
+        <!-- Rekber Escrow Protection Guarantee Banner -->
+        <div x-show="method !== 'cod'" x-cloak class="p-3.5 bg-gradient-to-r from-blue-50 to-teal-50 border border-blue-200/90 rounded-2xl flex items-start gap-3 shadow-2xs">
+            <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm shrink-0 font-bold shadow-2xs">
+                🛡️
+            </div>
+            <div class="text-xs">
+                <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-blue-950">Garansi Rekber Kampus (Rekening Bersama)</span>
+                    <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">100% AMAN</span>
+                </div>
+                <p class="text-[11px] text-blue-900/80 mt-1 leading-relaxed">
+                    Dana transfer Anda ditahan aman di rekening penampung resmi CampusMarket dan baru diteruskan ke penjual setelah paket barang Anda terima dan konfirmasi.
+                </p>
+            </div>
         </div>
 
         <!-- Payment Method Selection Cards -->
