@@ -48,27 +48,13 @@
             </div>
         @endif
 
-        @php
-            $statusBadgeClass = match($transaction->status) {
-                'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
-                'processing' => 'bg-blue-100 text-blue-800 border-blue-200',
-                'completed' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                'cancelled' => 'bg-slate-100 text-slate-600 border-slate-200',
-                default => 'bg-slate-100 text-slate-700 border-slate-200',
-            };
-        @endphp
+        <!-- Visual Transaction Status Timeline -->
+        @include('transactions._timeline', ['transaction' => $transaction])
 
-        <!-- Status Card -->
-        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-2.5">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Transaksi</span>
-                <span class="text-xs font-bold px-3 py-1 rounded-full border {{ $statusBadgeClass }}">
-                    {{ $transaction->status_label }}
-                </span>
-            </div>
-
-            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                <span class="text-slate-500">Metode Pengiriman:</span>
+        <!-- Quick Summary Card -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-2 text-xs">
+            <div class="flex items-center justify-between text-slate-500">
+                <span>Metode Pengiriman:</span>
                 <span class="font-bold text-slate-800 flex items-center gap-1">
                     @if ($transaction->delivery_method === 'cod')
                         <span>🤝 COD / Ketemu Langsung</span>
@@ -80,8 +66,8 @@
                 </span>
             </div>
 
-            <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-500">Metode Pembayaran:</span>
+            <div class="flex items-center justify-between text-slate-500 pt-1.5 border-t border-slate-100">
+                <span>Metode Pembayaran:</span>
                 <span class="font-bold text-slate-800 flex items-center gap-1">
                     @if ($transaction->payment_method === 'cod')
                         <span>💵 Bayar Tunai (COD)</span>
@@ -93,8 +79,8 @@
                 </span>
             </div>
 
-            <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-500">Waktu Pemesanan:</span>
+            <div class="flex items-center justify-between text-slate-500 pt-1.5 border-t border-slate-100">
+                <span>Waktu Pemesanan:</span>
                 <span class="text-slate-700 font-mono text-[11px]">{{ $transaction->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
             </div>
         </div>

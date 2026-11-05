@@ -143,6 +143,19 @@
                         </div>
                         <svg class="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
+
+                    <!-- Mini visual tracking progress -->
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                        <span class="text-slate-500 font-medium truncate max-w-[220px]">
+                            📍 {{ $trx->timeline['status_title'] }}
+                        </span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="font-bold text-slate-700 font-mono">{{ $trx->timeline['progress_percentage'] }}%</span>
+                            <div class="w-12 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full {{ $trx->status === 'cancelled' ? 'bg-rose-500' : ($trx->status === 'completed' ? 'bg-emerald-500' : 'bg-teal-600') }}" style="width: {{ $trx->timeline['progress_percentage'] }}%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </a>
             @empty
                 <div class="py-12 text-center bg-white border border-slate-200/90 rounded-2xl p-6">
@@ -196,6 +209,19 @@
                             </div>
                         </div>
                         <svg class="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+
+                    <!-- Mini visual tracking progress -->
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                        <span class="text-slate-500 font-medium truncate max-w-[220px]">
+                            📍 {{ $trx->timeline['status_title'] }}
+                        </span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="font-bold text-slate-700 font-mono">{{ $trx->timeline['progress_percentage'] }}%</span>
+                            <div class="w-12 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full {{ $trx->status === 'cancelled' ? 'bg-rose-500' : ($trx->status === 'completed' ? 'bg-emerald-500' : 'bg-teal-600') }}" style="width: {{ $trx->timeline['progress_percentage'] }}%"></div>
+                            </div>
+                        </div>
                     </div>
                 </a>
             @empty
