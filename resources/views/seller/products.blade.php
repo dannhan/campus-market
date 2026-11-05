@@ -13,11 +13,17 @@
             <h1 class="text-base font-bold text-slate-900 leading-tight">Etalase & Inventaris</h1>
             <span class="text-[10px] text-slate-400 font-medium">Kelola Katalog Produk Anda</span>
         </div>
-        <a href="{{ route('products.create') }}" class="w-9 h-9 -mr-1 rounded-full bg-teal-600/10 text-teal-700 hover:bg-teal-600 hover:text-white transition flex items-center justify-center" title="Tambah Produk Baru">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-            </svg>
-        </a>
+        <div class="flex items-center gap-1.5 -mr-1">
+            <a href="{{ route('seller.products.bulk') }}" class="h-9 px-2.5 rounded-full bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1" title="Upload Massal via CSV">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span>Upload CSV</span>
+            </a>
+            <a href="{{ route('products.create') }}" class="w-9 h-9 rounded-full bg-teal-600/10 text-teal-700 hover:bg-teal-600 hover:text-white transition flex items-center justify-center" title="Tambah Produk Baru">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+            </a>
+        </div>
     </div>
 
     <!-- Filter Tabs (Horizontal Scrollable) -->
@@ -58,6 +64,20 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 <span>{{ session('status') }}</span>
+            </div>
+        @endif
+
+        @if (session('bulk_warnings') && is_array(session('bulk_warnings')))
+            <div class="p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl space-y-1">
+                <span class="font-bold flex items-center gap-1.5 text-amber-800">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Catatan Upload Massal (Beberapa baris dilewati):
+                </span>
+                <ul class="list-disc list-inside text-[11px] text-amber-700 space-y-0.5">
+                    @foreach (session('bulk_warnings') as $warn)
+                        <li>{{ $warn }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
