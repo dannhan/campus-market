@@ -14,6 +14,7 @@ use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SellerDashboardController;
 use App\Http\Controllers\ShippingRateController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WishlistController;
@@ -129,6 +130,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/push-subscriptions', [NotificationController::class, 'subscribePush'])->name('push.subscribe');
         Route::delete('/push-subscriptions', [NotificationController::class, 'unsubscribePush'])->name('push.unsubscribe');
         Route::post('/notifications/test-push', [NotificationController::class, 'sendTestPush'])->name('notifications.test-push');
+
+        // Seller Center / Dashboard Penjual
+        Route::get('/seller', [SellerDashboardController::class, 'index'])->name('seller.dashboard');
+        Route::get('/seller/orders', [SellerDashboardController::class, 'orders'])->name('seller.orders');
+        Route::get('/seller/products', [SellerDashboardController::class, 'products'])->name('seller.products');
+        Route::post('/seller/products/{product}/status', [SellerDashboardController::class, 'toggleProductStatus'])->name('seller.products.status');
 
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
