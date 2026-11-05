@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
@@ -120,6 +121,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel'])->name('transactions.cancel');
         Route::post('/transactions/{transaction}/reviews', [ReviewController::class, 'store'])->name('transactions.reviews.store');
         Route::get('/users/{user}/reviews', [ReviewController::class, 'userReviews'])->name('users.reviews');
+
+        // Notification Center & Push Subscriptions
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        Route::post('/push-subscriptions', [NotificationController::class, 'subscribePush'])->name('push.subscribe');
+        Route::delete('/push-subscriptions', [NotificationController::class, 'unsubscribePush'])->name('push.unsubscribe');
+        Route::post('/notifications/test-push', [NotificationController::class, 'sendTestPush'])->name('notifications.test-push');
 
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

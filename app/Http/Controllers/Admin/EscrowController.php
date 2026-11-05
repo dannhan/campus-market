@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EscrowPayment;
+use App\Notifications\TransactionStatusNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -68,6 +69,17 @@ class EscrowController extends Controller
 
         $escrow->markHeld($request->user());
 
+        $escrow->transaction->seller->notify(new TransactionStatusNotification(
+            $escrow->transaction,
+            'verified',
+            "Dana setoran pembeli untuk transaksi {$escrow->transaction->transaction_code} telah diamankan rekber. Silakan siapkan pengiriman barang."
+        ));
+        $escrow->transaction->buyer->notify(new TransactionStatusNotification(
+            $escrow->transaction,
+            'verified',
+            "Setoran Anda untuk transaksi {$escrow->transaction->transaction_code} telah diverifikasi admin rekber."
+        ));
+
         return back()->with('status', "Setoran rekber {$escrow->escrow_code} berhasil diverifikasi. Dana saat ini diamankan di rekening penampung resmi.");
     }
 
@@ -83,6 +95,12 @@ class EscrowController extends Controller
         $notes = $request->input('notes', 'Pencairan dana rekber diproses oleh Admin CampusMarket.');
         $escrow->releaseToSeller($notes);
 
+        $escrow->transaction->seller->notify(new TransactionStatusNotification(
+            $escrow->transaction,
+            'completed',
+            "Dana rekening bersama {$escrow->escrow_code} telah dicairkan oleh admin ke rekening Anda."
+        ));
+
         return back()->with('status', "Dana sebesar {$escrow->formatted_total_amount} untuk {$escrow->escrow_code} berhasil dicairkan ke rekening penjual.");
     }
 
@@ -97,6 +115,12 @@ class EscrowController extends Controller
 
         $reason = $request->input('reason', 'Pengembalian dana diproses oleh Admin CampusMarket atas persetujuan pembatalan/sengketa.');
         $escrow->refundToBuyer($reason);
+
+        $escrow->transaction->buyer->notify(new TransactionStatusNotification(
+            $escrow->transaction,
+            'cancelled',
+            "Dana rekening bersama {$escrow->escrow_code} telah dikembalikan oleh admin ke rekening Anda."
+        ));
 
         return back()->with('status', "Dana sebesar {$escrow->formatted_total_amount} untuk {$escrow->escrow_code} berhasil dikembalikan ke pembeli.");
     }

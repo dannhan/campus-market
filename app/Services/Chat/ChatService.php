@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Product;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -66,6 +67,9 @@ class ChatService
             ]);
 
             $conversation->update(['last_message_at' => now()]);
+
+            $recipient = $conversation->otherParticipant($sender);
+            $recipient->notify(new NewMessageNotification($message, $conversation));
 
             return $message;
         });

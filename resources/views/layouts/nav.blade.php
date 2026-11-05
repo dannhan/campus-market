@@ -57,7 +57,10 @@
     <!-- Saya / Profil -->
     <a href="{{ route('profile') }}"
        @if ($isProfile) aria-current="page" @endif
-       class="flex flex-1 flex-col items-center justify-center min-h-11 min-w-11 px-1 {{ $isProfile ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600' }} transition">
+       class="relative flex flex-1 flex-col items-center justify-center min-h-11 min-w-11 px-1 {{ $isProfile ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600' }} transition">
+        @if ((auth()->user()?->unreadNotificationsCount() ?? 0) > 0)
+            <span class="absolute -top-0.5 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
+        @endif
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
         </svg>

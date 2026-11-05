@@ -5,6 +5,7 @@ namespace App\Services\Bargaining;
 use App\Models\Offer;
 use App\Models\Product;
 use App\Models\User;
+use App\Notifications\OfferNotification;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -45,7 +46,7 @@ class OfferService
             throw new InvalidArgumentException('Anda masih memiliki penawaran yang menunggu respons penjual di produk ini.');
         }
 
-        return Offer::create([
+        $offer = Offer::create([
             'product_id' => $product->id,
             'user_id' => $buyer->id,
             'parent_offer_id' => null,
@@ -53,6 +54,10 @@ class OfferService
             'message' => $message,
             'status' => 'pending',
         ]);
+
+        $product->user->notify(new OfferNotification($offer, 'new_offer'));
+
+        return $offer;
     }
 
     /**
@@ -74,6 +79,7 @@ class OfferService
 
         if ($action === 'accept') {
             $this->accept($offer, $responder);
+            $offer->user->notify(new OfferNotification($offer, 'accepted'));
 
             return null;
         }
@@ -84,6 +90,7 @@ class OfferService
             }
 
             $offer->update(['status' => 'rejected']);
+            $offer->user->notify(new OfferNotification($offer, 'rejected'));
 
             return null;
         }
@@ -100,7 +107,7 @@ class OfferService
         return DB::transaction(function () use ($offer, $responder, $counterPrice, $message) {
             $offer->update(['status' => 'countered']);
 
-            return Offer::create([
+            $counter = Offer::create([
                 'product_id' => $offer->product_id,
                 'user_id' => $responder->id,
                 'parent_offer_id' => $offer->id,
@@ -108,6 +115,11 @@ class OfferService
                 'message' => $message,
                 'status' => 'pending',
             ]);
+
+            $recipient = ($offer->user_id === $responder->id) ? $offer->product->user : $offer->user;
+            $recipient->notify(new OfferNotification($counter, 'countered'));
+
+            return $counter;
         });
     }
 
