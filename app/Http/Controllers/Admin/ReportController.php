@@ -157,11 +157,11 @@ class ReportController extends Controller
             ]);
         }
 
-        $content = $exportService->exportExcelXml($query);
-        $filename = "laporan_transaksi_campusmarket_{$timestamp}.{$format}";
+        $content = $exportService->exportXlsx($query);
+        $filename = "laporan_transaksi_campusmarket_{$timestamp}.xlsx";
 
         return response($content, 200, [
-            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',

@@ -129,19 +129,31 @@ class TransactionExportTest extends TestCase
         ]));
 
         $response->assertOk();
-        $this->assertStringContainsString('application/vnd.ms-excel', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $response->headers->get('Content-Type'));
         $this->assertStringContainsString('laporan_transaksi_campusmarket_', $response->headers->get('Content-Disposition'));
         $this->assertStringEndsWith('.xlsx"', $response->headers->get('Content-Disposition'));
 
         $content = $response->getContent();
-        $this->assertStringContainsString('xmlns="urn:schemas-microsoft-com:office:spreadsheet"', $content);
-        $this->assertStringContainsString('<Worksheet ss:Name="Laporan Transaksi">', $content);
-        $this->assertStringContainsString('Kode Transaksi', $content);
-        $this->assertStringContainsString('TRX-2026-XLSX01', $content);
-        $this->assertStringContainsString('Buku Pemrograman Python Lanjut', $content);
-        $this->assertStringContainsString('Budi Santoso', $content);
-        $this->assertStringContainsString('Dewi Lestari', $content);
-        $this->assertStringContainsString('87000', $content);
+        // Valid ZIP signature (PK\x03\x04)
+        $this->assertStringStartsWith("PK\x03\x04", $content);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'test_xlsx_');
+        file_put_contents($tmp, $content);
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($tmp));
+        $this->assertNotFalse($zip->locateName('[Content_Types].xml'));
+        $this->assertNotFalse($zip->locateName('xl/workbook.xml'));
+        $this->assertNotFalse($zip->locateName('xl/styles.xml'));
+        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $this->assertNotFalse($sheetXml);
+        $this->assertStringContainsString('Kode Transaksi', $sheetXml);
+        $this->assertStringContainsString('TRX-2026-XLSX01', $sheetXml);
+        $this->assertStringContainsString('Buku Pemrograman Python Lanjut', $sheetXml);
+        $this->assertStringContainsString('Budi Santoso', $sheetXml);
+        $this->assertStringContainsString('Dewi Lestari', $sheetXml);
+        $this->assertStringContainsString('87000', $sheetXml);
+        $zip->close();
+        @unlink($tmp);
     }
 
     public function test_admin_can_export_transactions_to_csv(): void
