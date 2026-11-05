@@ -1,6 +1,6 @@
 @php($route = request()->route()?->getName())
 @php($isHome = $route === 'welcome')
-@php($isSearch = in_array($route, ['products.index', 'products.show']))
+@php($isSearch = in_array($route, ['products.index', 'products.show', 'requests.index', 'requests.show', 'requests.create', 'requests.edit']))
 @php($isSell = in_array($route, ['products.create', 'products.edit']))
 @php($isChat = $route === 'chats.index' || str_starts_with((string) $route, 'chats.'))
 @php($isProfile = $route === 'profile' || str_starts_with((string) $route, 'profile.') || str_starts_with((string) $route, 'offers.') || str_starts_with((string) $route, 'wishlist.') || str_starts_with((string) $route, 'disputes.') || str_starts_with((string) $route, 'transactions.') || str_starts_with((string) $route, 'seller.') || str_starts_with((string) $route, 'admin.'))
