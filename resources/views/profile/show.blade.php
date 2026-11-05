@@ -367,6 +367,32 @@
             </div>
         </a>
 
+        <!-- Wanted Board / Item Requests -->
+        <a href="{{ route('requests.index', ['scope' => 'my']) }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800">Papan Cari Barang (Wanted Board)</span>
+                        @php
+                            $myReqCount = $user->itemRequests()->where('status', 'open')->count();
+                        @endphp
+                        @if ($myReqCount > 0)
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100">
+                                {{ $myReqCount }} aktif
+                            </span>
+                        @endif
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium">Lihat dan kelola postingan barang yang Anda cari</div>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
         <!-- Payment Settings (Bank & E-Wallet) -->
         <a href="{{ route('profile.payments.edit') }}" class="block bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-300 transition">
             <div class="flex items-center gap-3">

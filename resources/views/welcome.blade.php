@@ -78,6 +78,10 @@
             <a href="{{ route('products.index') }}" class="w-full block text-center py-3.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-md shadow-teal-600/20 transition duration-150">
                 Lihat Etalase Produk
             </a>
+            <a href="{{ route('requests.index') }}" class="w-full block text-center py-3 px-4 bg-teal-50 border border-teal-200 text-teal-800 font-semibold rounded-xl hover:bg-teal-100 transition duration-150 text-xs flex items-center justify-center gap-1.5">
+                <span>🔍</span>
+                <span>Papan Cari Barang (Wanted Board)</span>
+            </a>
             <a href="{{ route('profile') }}" class="w-full block text-center py-3.5 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition duration-150">
                 Buka Profil Saya
             </a>

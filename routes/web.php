@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\ItemRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\PaymentSettingsController;
@@ -36,6 +37,7 @@ Route::get('/', [AuthController::class, 'welcome'])->name('welcome');
 
 // Public Marketplace Browsing (SRS-005)
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/requests', [ItemRequestController::class, 'index'])->name('requests.index');
 // NOTE: the public product detail route is registered at the bottom of this file,
 // after /products/create, so the static segment cannot be captured by {product}.
 
@@ -141,6 +143,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/seller/products/bulk/template', [SellerBulkProductController::class, 'template'])->name('seller.products.bulk.template');
         Route::post('/seller/products/bulk', [SellerBulkProductController::class, 'store'])->name('seller.products.bulk.store');
 
+        // Wanted Board (Papan Cari Barang) Actions
+        Route::get('/requests/create', [ItemRequestController::class, 'create'])->name('requests.create');
+        Route::post('/requests', [ItemRequestController::class, 'store'])->name('requests.store');
+        Route::get('/requests/{itemRequest}/edit', [ItemRequestController::class, 'edit'])->name('requests.edit');
+        Route::put('/requests/{itemRequest}', [ItemRequestController::class, 'update'])->name('requests.update');
+        Route::delete('/requests/{itemRequest}', [ItemRequestController::class, 'destroy'])->name('requests.destroy');
+        Route::post('/requests/{itemRequest}/close', [ItemRequestController::class, 'close'])->name('requests.close');
+        Route::post('/requests/{itemRequest}/reopen', [ItemRequestController::class, 'reopen'])->name('requests.reopen');
+        Route::post('/requests/{itemRequest}/offers', [ItemRequestController::class, 'storeOffer'])->name('requests.offers.store');
+        Route::post('/requests/{itemRequest}/offers/{offer}/accept', [ItemRequestController::class, 'acceptOffer'])->name('requests.offers.accept');
+
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::resource('categories', AdminCategoryController::class)->except(['show']);
@@ -160,3 +173,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/products/{product}', [ProductController::class, 'show'])
     ->whereNumber('product')
     ->name('products.show');
+
+// Public Item Request Detail (Wanted Board)
+Route::get('/requests/{itemRequest}', [ItemRequestController::class, 'show'])
+    ->whereNumber('itemRequest')
+    ->name('requests.show');
