@@ -124,6 +124,78 @@
             </span>
         </div>
 
+        <!-- Estimasi Ongkir Antar-Kampus Widget -->
+        <div class="mt-4 p-3.5 bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-slate-200/90 rounded-2xl text-xs space-y-2.5"
+             x-data="{
+                 originId: {{ $sellerUniversity?->id ?? 'null' }},
+                 destId: {{ $userUniversity?->id ?? $sellerUniversity?->id ?? 'null' }},
+                 rates: {{ json_encode($initialShippingEstimate['rates'] ?? []) }},
+                 distanceLabel: '{{ $initialShippingEstimate['distance_label'] ?? '' }}',
+                 zoneLabel: '{{ $initialShippingEstimate['zone_label'] ?? '' }}',
+                 costLabel: '{{ $initialShippingEstimate['formatted_cost'] ?? 'Rp 7.000' }}',
+                 etd: '{{ $initialShippingEstimate['etd'] ?? '1 Hari' }}',
+                 loading: false,
+                 async checkRate(id) {
+                     if (!id || !this.originId) return;
+                     this.loading = true;
+                     try {
+                         const res = await fetch(`{{ route('shipping.estimate') }}?origin_university_id=${this.originId}&destination_university_id=${id}&courier=jnt`);
+                         const json = await res.json();
+                         if (json.success && json.data) {
+                             this.rates = json.data.rates;
+                             this.distanceLabel = json.data.distance_label;
+                             this.zoneLabel = json.data.zone_label;
+                             this.costLabel = json.data.formatted_cost;
+                             this.etd = json.data.etd;
+                         }
+                     } catch(e) {
+                         console.error('Failed to estimate shipping:', e);
+                     } finally {
+                         this.loading = false;
+                     }
+                 }
+             }">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">🚚</span>
+                    <div>
+                        <div class="font-bold text-slate-800">Estimasi Ongkir ke Kampus Anda</div>
+                        <div class="text-[10px] text-slate-500">Asal: {{ $sellerUniversity?->name ?? 'Kampus Penjual' }} ({{ $sellerUniversity?->city ?? 'Semarang' }})</div>
+                    </div>
+                </div>
+                <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200" x-text="zoneLabel"></span>
+            </div>
+
+            <!-- Destination University Dropdown -->
+            <div class="space-y-1">
+                <label for="product_dest_univ" class="block text-[10px] font-semibold text-slate-600">Pilih Kampus / Kota Tujuan:</label>
+                <select
+                    id="product_dest_univ"
+                    x-model="destId"
+                    @change="checkRate(destId)"
+                    class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 transition"
+                >
+                    @foreach ($universities as $univ)
+                        <option value="{{ $univ->id }}" @selected($univ->id === ($userUniversity?->id ?? $sellerUniversity?->id))>
+                            {{ $univ->name }} ({{ $univ->formatted_location }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Calculated Rate Pill -->
+            <div class="p-2 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-[11px]">
+                <div class="flex items-center gap-1.5 text-slate-700">
+                    <span x-show="!loading">📍 Jarak: <strong class="font-mono text-slate-900" x-text="distanceLabel"></strong></span>
+                    <span x-show="loading" class="text-slate-400">Menghitung jarak riil...</span>
+                </div>
+                <div class="text-right">
+                    <span class="font-mono font-extrabold text-teal-700" x-text="costLabel"></span>
+                    <span class="text-[10px] text-slate-400 block" x-text="'Estimasi: ' + etd"></span>
+                </div>
+            </div>
+        </div>
+
         @auth
             @if ($isOwner)
                 <!-- Owner Actions -->

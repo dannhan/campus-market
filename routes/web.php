@@ -12,6 +12,7 @@ use App\Http\Controllers\OfferController;
 use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ShippingRateController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
@@ -102,6 +103,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])->name('disputes.show');
 
         // Student-Friendly Payment Methods & Transactions
+        Route::get('/shipping/estimate', [ShippingRateController::class, 'estimate'])->name('shipping.estimate');
         Route::get('/profile/payments', [PaymentSettingsController::class, 'edit'])->name('profile.payments.edit');
         Route::match(['put', 'patch'], '/profile/payments', [PaymentSettingsController::class, 'update'])->name('profile.payments.update');
 

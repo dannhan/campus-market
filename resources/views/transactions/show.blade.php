@@ -138,6 +138,26 @@
             @else
                 <!-- Courier Delivery Details -->
                 <div class="space-y-3">
+                    @if ($transaction->originUniversity || $transaction->destinationUniversity)
+                        <!-- Campus Shipping Route Card -->
+                        <div class="p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-200/90 rounded-xl space-y-1 text-xs">
+                            <span class="text-[10px] font-bold text-blue-900 uppercase block">Rute Pengiriman Antar-Kampus:</span>
+                            <div class="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                                <span>{{ $transaction->originUniversity?->name ?? 'Kampus Penjual' }}</span>
+                                <span class="text-blue-600 font-extrabold">→</span>
+                                <span>{{ $transaction->destinationUniversity?->name ?? 'Kampus Pembeli' }}</span>
+                            </div>
+                            <div class="flex items-center gap-3 pt-1 text-[11px] text-slate-600">
+                                @if ($transaction->distance_km !== null)
+                                    <span>📍 Jarak: <strong class="font-mono text-slate-800">{{ $transaction->distance_km <= 0.05 ? '< 1 km (Satu Kampus)' : number_format($transaction->distance_km, 1, ',', '.') . ' km' }}</strong></span>
+                                @endif
+                                @if ($transaction->estimated_delivery_days)
+                                    <span>⏱️ Estimasi Tiba: <strong class="text-teal-700">{{ $transaction->estimated_delivery_days }}</strong></span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="grid grid-cols-2 gap-2 text-xs">
                         <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
                             <span class="text-[10px] font-semibold text-slate-400 block uppercase">Kurir Ekspedisi</span>
