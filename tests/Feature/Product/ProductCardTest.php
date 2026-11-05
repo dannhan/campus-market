@@ -68,6 +68,25 @@ class ProductCardTest extends TestCase
         $this->assertStringContainsString('Simpan ke Wishlist', $html);
     }
 
+    public function test_card_renders_external_image_url_correctly(): void
+    {
+        $university = $this->createUniversity();
+        $seller = $this->createStudentUser($university, '24060122130001', 'Budi Santoso', 'budi.santoso@students.undip.ac.id');
+        $category = Category::create(['name' => 'Buku per Semester', 'slug' => 'buku-per-semester']);
+        $product = $this->createProduct($seller, $category, [
+            'title' => 'Buku Kalkulus Purcell',
+        ]);
+        $product->images()->create([
+            'path' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c',
+            'is_primary' => true,
+        ]);
+
+        $html = $this->renderProductCards();
+
+        $this->assertStringContainsString('https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c', $html);
+        $this->assertEquals('https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c', $product->cover_image_url);
+    }
+
     private function createUniversity(): University
     {
         return University::create([

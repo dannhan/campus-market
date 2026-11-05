@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -139,11 +138,13 @@ class Product extends Model
     {
         $primary = $this->images->firstWhere('is_primary') ?? $this->images->first();
 
-        if ($primary && Storage::disk('public')->exists($primary->path)) {
-            return Storage::disk('public')->url($primary->path);
+        if ($primary) {
+            return $primary->url;
         }
 
-        return 'https://placehold.co/600x400/CCFBF1/0F766E?text=CampusMarket';
+        $text = urlencode($this->title);
+
+        return "https://placehold.co/600x400/CCFBF1/0F766E?text={$text}";
     }
 
     /**
