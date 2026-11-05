@@ -36,6 +36,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'ewallet_account_name',
         'preferred_meeting_location',
         'preferred_pickup_location',
+        'points_balance',
+        'points_lifetime',
+        'last_check_in_at',
     ];
 
     protected $attributes = [
@@ -58,6 +61,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'buyer_rating' => 'decimal:2',
             'seller_review_count' => 'integer',
             'buyer_review_count' => 'integer',
+            'points_balance' => 'integer',
+            'points_lifetime' => 'integer',
+            'last_check_in_at' => 'datetime',
         ];
     }
 
@@ -312,5 +318,84 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return number_format((float) $this->buyer_rating, 1).' / 5.0 ('.$this->buyer_review_count.' ulasan)';
+    }
+
+    public function pointTransactions(): HasMany
+    {
+        return $this->hasMany(PointTransaction::class);
+    }
+
+    public function rewardRedemptions(): HasMany
+    {
+        return $this->hasMany(RewardRedemption::class);
+    }
+
+    public function canCheckInToday(): bool
+    {
+        if (! $this->last_check_in_at) {
+            return true;
+        }
+
+        return ! $this->last_check_in_at->isToday();
+    }
+
+    public function getRewardTierAttribute(): array
+    {
+        $lifetime = (int) ($this->points_lifetime ?? 0);
+
+        if ($lifetime >= 700) {
+            return [
+                'name' => 'Legenda Kampus',
+                'badge' => 'Platinum',
+                'level' => 4,
+                'color' => 'teal',
+                'next_threshold' => null,
+                'points_needed' => 0,
+                'progress_percent' => 100,
+            ];
+        }
+
+        if ($lifetime >= 300) {
+            $needed = 700 - $lifetime;
+            $progress = (int) round((($lifetime - 300) / 400) * 100);
+
+            return [
+                'name' => 'Bintang Kampus',
+                'badge' => 'Gold',
+                'level' => 3,
+                'color' => 'amber',
+                'next_threshold' => 700,
+                'points_needed' => max(0, $needed),
+                'progress_percent' => min(100, max(0, $progress)),
+            ];
+        }
+
+        if ($lifetime >= 100) {
+            $needed = 300 - $lifetime;
+            $progress = (int) round((($lifetime - 100) / 200) * 100);
+
+            return [
+                'name' => 'Mahasiswa Aktif',
+                'badge' => 'Silver',
+                'level' => 2,
+                'color' => 'slate',
+                'next_threshold' => 300,
+                'points_needed' => max(0, $needed),
+                'progress_percent' => min(100, max(0, $progress)),
+            ];
+        }
+
+        $needed = 100 - $lifetime;
+        $progress = (int) round(($lifetime / 100) * 100);
+
+        return [
+            'name' => 'Mahasiswa Perintis',
+            'badge' => 'Bronze',
+            'level' => 1,
+            'color' => 'orange',
+            'next_threshold' => 100,
+            'points_needed' => max(0, $needed),
+            'progress_percent' => min(100, max(0, $progress)),
+        ];
     }
 }

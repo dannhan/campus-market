@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReviewRequest;
+use App\Models\PointTransaction;
 use App\Models\Review;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\RewardPointService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -50,6 +52,19 @@ class ReviewController extends Controller
 
         // Recalculate target user's aggregated ratings
         $reviewee->recalculateRatings();
+
+        // Award reward points for submitting a review
+        try {
+            app(RewardPointService::class)->awardPoints(
+                $user,
+                RewardPointService::POINTS_REVIEW_SUBMITTED,
+                PointTransaction::TYPE_REVIEW_SUBMITTED,
+                "Reward Ulasan & Penilaian Transaksi ({$transaction->transaction_code})",
+                $transaction
+            );
+        } catch (\Throwable $e) {
+            // Ignore point award error to avoid blocking the review flow
+        }
 
         $targetLabel = $isBuyer ? 'penjual' : 'pembeli';
 
