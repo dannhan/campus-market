@@ -6,6 +6,7 @@ use App\Services\Transaction\TransactionTimelineService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -229,6 +230,61 @@ class Transaction extends Model
     public function escrowPayment(): HasOne
     {
         return $this->hasOne(EscrowPayment::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function buyerReview(): HasOne
+    {
+        return $this->hasOne(Review::class)->whereColumn('reviewer_id', 'transactions.buyer_id');
+    }
+
+    public function sellerReview(): HasOne
+    {
+        return $this->hasOne(Review::class)->whereColumn('reviewer_id', 'transactions.seller_id');
+    }
+
+    /**
+     * Determine if the given user is eligible to submit a review for this transaction.
+     */
+    public function canBeReviewedBy(User $user): bool
+    {
+        if ($this->status !== self::STATUS_COMPLETED) {
+            return false;
+        }
+
+        if ($this->buyer_id !== $user->id && $this->seller_id !== $user->id) {
+            return false;
+        }
+
+        return ! $this->hasReviewedBy($user);
+    }
+
+    /**
+     * Check if the user has already submitted a review for this transaction.
+     */
+    public function hasReviewedBy(User $user): bool
+    {
+        return $this->reviews()->where('reviewer_id', $user->id)->exists();
+    }
+
+    /**
+     * Get review submitted by the given user for this transaction.
+     */
+    public function getReviewBy(User $user): ?Review
+    {
+        return $this->reviews()->where('reviewer_id', $user->id)->first();
+    }
+
+    /**
+     * Get review received by the given user from the counterparty for this transaction.
+     */
+    public function getReviewFor(User $user): ?Review
+    {
+        return $this->reviews()->where('reviewee_id', $user->id)->first();
     }
 
     public function isEscrowProtected(): bool

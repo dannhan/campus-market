@@ -359,28 +359,39 @@
             </div>
         </a>
 
-        <!-- Rating Card (Prepared for future sprints without fabricated data) -->
-        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">
-                Reputasi & Rating
-            </h3>
+        <!-- Rating & Reputation Card -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3">
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Reputasi & Rating
+                </h3>
+                <a href="{{ route('users.reviews', $user) }}" class="text-[11px] font-semibold text-teal-700 hover:text-teal-800 hover:underline inline-flex items-center gap-1">
+                    <span>Lihat Semua Ulasan</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <a href="{{ route('users.reviews', ['user' => $user->id, 'tab' => 'seller']) }}" class="p-3 bg-slate-50 hover:bg-slate-100/80 transition rounded-xl border border-slate-100 block">
                     <div class="text-[11px] text-slate-500 font-medium">Sebagai Penjual</div>
-                    <div class="text-xs font-bold text-slate-800 mt-1">
-                        {{ $user->seller_rating_display }}
+                    <div class="text-xs font-bold text-slate-800 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                        <span>{{ $user->seller_rating_display }}</span>
                     </div>
-                </div>
-                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span class="text-[10px] text-slate-400 block mt-0.5">{{ $user->seller_review_count }} ulasan</span>
+                </a>
+
+                <a href="{{ route('users.reviews', ['user' => $user->id, 'tab' => 'buyer']) }}" class="p-3 bg-slate-50 hover:bg-slate-100/80 transition rounded-xl border border-slate-100 block">
                     <div class="text-[11px] text-slate-500 font-medium">Sebagai Pembeli</div>
-                    <div class="text-xs font-bold text-slate-800 mt-1">
-                        {{ $user->buyer_rating_display }}
+                    <div class="text-xs font-bold text-slate-800 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                        <span>{{ $user->buyer_rating_display }}</span>
                     </div>
-                </div>
+                    <span class="text-[10px] text-slate-400 block mt-0.5">{{ $user->buyer_review_count }} ulasan</span>
+                </a>
             </div>
-            <p class="text-[10px] text-slate-400 mt-2 px-1">
-                Rating dihitung otomatis dari transaksi tuntas pada sprint mendatang.
+            <p class="text-[10px] text-slate-400 px-1">
+                Rating dihitung otomatis dari transaksi tuntas dan ulasan terverifikasi mahasiswa.
             </p>
         </div>
 
