@@ -99,7 +99,7 @@
             })->count();
         @endphp
 
-        <a href="{{ route('seller.dashboard') }}" class="block bg-gradient-to-r from-teal-800 via-teal-700 to-teal-900 rounded-2xl p-4 text-white shadow-md hover:shadow-lg transition relative overflow-hidden group">
+        <a href="{{ route('seller.dashboard') }}" class="block bg-teal-900 bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-950 rounded-2xl p-4 text-white shadow-md hover:shadow-lg border border-teal-800/80 transition relative overflow-hidden group">
             <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none group-hover:scale-110 transition duration-300"></div>
 
             <div class="flex items-start justify-between relative z-10">
