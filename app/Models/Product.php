@@ -20,6 +20,16 @@ class Product extends Model
 
     public const STATUSES = ['active', 'sold', 'withdrawn'];
 
+    public const MODERATION_STATUS_APPROVED = 'approved';
+
+    public const MODERATION_STATUS_PENDING = 'pending';
+
+    public const MODERATION_STATUS_REJECTED = 'rejected';
+
+    public const MODERATION_STATUS_FLAGGED = 'flagged';
+
+    public const MODERATION_STATUSES = ['approved', 'pending', 'rejected', 'flagged'];
+
     protected $fillable = [
         'user_id',
         'category_id',
@@ -30,6 +40,11 @@ class Product extends Model
         'condition',
         'transaction_type',
         'status',
+        'moderation_status',
+        'is_verified',
+        'moderated_at',
+        'moderated_by_id',
+        'moderation_notes',
         'location',
         'bargainable',
         'delivery_methods',
@@ -43,6 +58,8 @@ class Product extends Model
         return [
             'price' => 'decimal:2',
             'bargainable' => 'boolean',
+            'is_verified' => 'boolean',
+            'moderated_at' => 'datetime',
             'delivery_methods' => 'array',
             'courier_fee' => 'decimal:2',
             'views_count' => 'integer',
@@ -109,6 +126,16 @@ class Product extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(ProductReport::class);
+    }
+
+    public function moderator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'moderated_by_id');
     }
 
     /**
@@ -196,7 +223,64 @@ class Product extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', 'active');
+        return $query->where('status', 'active')
+            ->where('moderation_status', '!=', self::MODERATION_STATUS_REJECTED);
+    }
+
+    public function scopeVerified(Builder $query): Builder
+    {
+        return $query->where('is_verified', true);
+    }
+
+    public function scopePendingModeration(Builder $query): Builder
+    {
+        return $query->where('moderation_status', self::MODERATION_STATUS_PENDING);
+    }
+
+    public function scopeFlagged(Builder $query): Builder
+    {
+        return $query->where('moderation_status', self::MODERATION_STATUS_FLAGGED);
+    }
+
+    public function scopeRejected(Builder $query): Builder
+    {
+        return $query->where('moderation_status', self::MODERATION_STATUS_REJECTED);
+    }
+
+    public function isVerified(): bool
+    {
+        return (bool) $this->is_verified;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->moderation_status === self::MODERATION_STATUS_APPROVED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->moderation_status === self::MODERATION_STATUS_REJECTED;
+    }
+
+    public function isFlagged(): bool
+    {
+        return $this->moderation_status === self::MODERATION_STATUS_FLAGGED;
+    }
+
+    public function isPendingModeration(): bool
+    {
+        return $this->moderation_status === self::MODERATION_STATUS_PENDING;
+    }
+
+    public function getModerationStatusLabelAttribute(): string
+    {
+        return match ($this->moderation_status) {
+            self::MODERATION_STATUS_APPROVED => 'Disetujui',
+            self::MODERATION_STATUS_PENDING => 'Menunggu Review',
+            self::MODERATION_STATUS_FLAGGED => 'Dilaporkan / Ditandai',
+            self::MODERATION_STATUS_REJECTED => 'Ditolak / Ditangguhkan',
+            default => ucfirst($this->moderation_status),
+        };
     }
 
     /**

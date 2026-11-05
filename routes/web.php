@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DisputeController as AdminDisputeController;
 use App\Http\Controllers\Admin\EscrowController as AdminEscrowController;
+use App\Http\Controllers\Admin\ProductModerationController as AdminProductModerationController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\RewardController as AdminRewardController;
 use App\Http\Controllers\AuthController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfferController;
 use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\RewardController;
@@ -162,6 +164,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/rewards/check-in', [RewardController::class, 'checkIn'])->name('rewards.checkin');
         Route::post('/rewards/{rewardItem}/redeem', [RewardController::class, 'redeem'])->name('rewards.redeem');
 
+        // Product Reporting (Pelaporan Produk oleh Mahasiswa)
+        Route::post('/products/{product}/report', [ProductReportController::class, 'store'])->name('products.report');
+
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::resource('categories', AdminCategoryController::class)->except(['show']);
@@ -187,6 +192,16 @@ Route::middleware('auth')->group(function () {
             Route::get('/rewards/redemptions', [AdminRewardController::class, 'redemptions'])->name('rewards.redemptions');
             Route::post('/rewards/redemptions/{redemption}/fulfill', [AdminRewardController::class, 'markRedemptionFulfilled'])->name('rewards.redemptions.fulfill');
             Route::get('/rewards/history', [AdminRewardController::class, 'history'])->name('rewards.history');
+
+            // Admin Product Moderation & Verification
+            Route::get('/moderation', [AdminProductModerationController::class, 'index'])->name('moderation.index');
+            Route::get('/moderation/{product}', [AdminProductModerationController::class, 'show'])->name('moderation.show');
+            Route::post('/moderation/{product}/verify', [AdminProductModerationController::class, 'verify'])->name('moderation.verify');
+            Route::post('/moderation/{product}/unverify', [AdminProductModerationController::class, 'unverify'])->name('moderation.unverify');
+            Route::post('/moderation/{product}/approve', [AdminProductModerationController::class, 'approve'])->name('moderation.approve');
+            Route::post('/moderation/{product}/reject', [AdminProductModerationController::class, 'reject'])->name('moderation.reject');
+            Route::post('/moderation/{product}/reports/{report}/dismiss', [AdminProductModerationController::class, 'dismissReport'])->name('moderation.reports.dismiss');
+            Route::delete('/moderation/{product}', [AdminProductModerationController::class, 'destroy'])->name('moderation.destroy');
         });
     });
 });

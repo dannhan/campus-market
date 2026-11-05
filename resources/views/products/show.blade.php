@@ -67,6 +67,30 @@
     </div>
 
     <div class="p-4 pb-6 flex-1">
+        @if ($product->is_verified)
+            <div class="mb-4 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/90 rounded-2xl flex items-center gap-2.5 text-xs text-emerald-950 shadow-2xs">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">✓</span>
+                <div class="min-w-0 flex-1">
+                    <span class="font-bold text-emerald-900">Produk Terverifikasi Kampus</span>
+                    <p class="text-[11px] text-emerald-700/90 mt-0.5 leading-snug">
+                        Produk ini telah melalui proses verifikasi dan moderasi keaslian oleh admin untuk menjamin keamanan transaksi antar mahasiswa.
+                    </p>
+                </div>
+            </div>
+        @endif
+
+        @if ($product->isRejected())
+            <div class="mb-4 p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-xs text-rose-900 shadow-2xs">
+                <div class="flex items-center gap-1.5 font-bold text-rose-800">
+                    <span>⚠️</span>
+                    <span>Produk Ditangguhkan oleh Tim Moderator</span>
+                </div>
+                <p class="text-[11px] text-rose-700 mt-1 leading-relaxed">
+                    Alasan: <strong>{{ $product->moderation_notes ?? 'Melanggar aturan atau terindikasi penipuan.' }}</strong>
+                </p>
+            </div>
+        @endif
+
         <!-- Title & Price -->
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
@@ -241,6 +265,44 @@
                         <p class="text-xs text-slate-500 font-medium">Penjual tidak menerima tawaran harga untuk produk ini.</p>
                     </div>
                 @endif
+            @endif
+
+            @if (! $isOwner)
+                <!-- Report Suspicious Product Option -->
+                <div class="mt-6 pt-4 border-t border-slate-100" x-data="{ reportOpen: false }">
+                    <button type="button" @click="reportOpen = ! reportOpen" class="w-full text-center text-xs font-semibold text-slate-400 hover:text-rose-600 transition flex items-center justify-center gap-1.5 py-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span>Laporkan Produk Mencurigakan / Penipuan</span>
+                    </button>
+
+                    <div x-show="reportOpen" x-cloak class="mt-3 p-4 bg-rose-50/70 border border-rose-200 rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-rose-900">Formulir Laporan Pelanggaran</span>
+                            <button type="button" @click="reportOpen = false" class="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                        </div>
+
+                        <form action="{{ route('products.report', $product) }}" method="POST" class="space-y-3">
+                            @csrf
+                            <div>
+                                <label for="report_reason" class="block text-[11px] font-bold text-slate-700 mb-1">Alasan Pengaduan <span class="text-rose-500">*</span></label>
+                                <select id="report_reason" name="reason" required class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-1 focus:ring-rose-500">
+                                    @foreach (\App\Models\ProductReport::REASONS as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="report_details" class="block text-[11px] font-bold text-slate-700 mb-1">Keterangan Tambahan</label>
+                                <textarea id="report_details" name="details" rows="2" placeholder="Jelaskan alasan atau bukti kecurigaan Anda..." class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-1 focus:ring-rose-500"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                                Kirim Laporan ke Admin
+                            </button>
+                        </form>
+                    </div>
+                </div>
             @endif
         @endauth
     </div>
