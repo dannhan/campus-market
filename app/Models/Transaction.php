@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Transaction\TransactionTimelineService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -277,6 +278,11 @@ class Transaction extends Model
         }
 
         return "{$origin} → {$dest}";
+    }
+
+    public function getTimelineAttribute(): array
+    {
+        return app(TransactionTimelineService::class)->getTimeline($this);
     }
 
     public function getPaymentMethodLabelAttribute(): string
