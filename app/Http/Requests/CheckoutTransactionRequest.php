@@ -22,6 +22,15 @@ class CheckoutTransactionRequest extends FormRequest
                     : Transaction::DELIVERY_METHOD_PICKUP,
             ]);
         }
+
+        if (! $this->has('use_escrow')) {
+            $this->merge([
+                'use_escrow' => in_array($this->input('payment_method'), [
+                    Transaction::PAYMENT_METHOD_BANK_TRANSFER,
+                    Transaction::PAYMENT_METHOD_EWALLET,
+                ], true),
+            ]);
+        }
     }
 
     public function rules(): array
@@ -32,6 +41,7 @@ class CheckoutTransactionRequest extends FormRequest
             'payment_method' => ['required', 'string', Rule::in(array_keys(Transaction::PAYMENT_METHODS))],
             'payment_channel' => ['required', 'string', Rule::in(array_keys(Transaction::PAYMENT_CHANNELS))],
             'delivery_method' => ['required', 'string', Rule::in(array_keys(Transaction::DELIVERY_METHODS))],
+            'use_escrow' => ['nullable', 'boolean'],
             'meeting_location' => [
                 'nullable',
                 'string',

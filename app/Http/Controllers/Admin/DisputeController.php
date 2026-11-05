@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ResolveDisputeRequest;
 use App\Models\Dispute;
+use App\Models\EscrowPayment;
+use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -87,6 +89,16 @@ class DisputeController extends Controller
             'admin_notes' => $validated['admin_notes'],
             'resolved_at' => $resolvedAt,
         ]);
+
+        $transaction = Transaction::where('product_id', $dispute->product_id)->latest()->first();
+        if ($transaction?->escrowPayment && $transaction->escrowPayment->status === EscrowPayment::STATUS_DISPUTED) {
+            $decision = $validated['admin_decision'] ?? null;
+            if ($decision === Dispute::DECISION_FAVOR_BUYER) {
+                $transaction->escrowPayment->refundToBuyer("Penyelesaian mediasi sengketa admin: memenangkan pembeli. Catatan: {$validated['admin_notes']}");
+            } elseif ($decision === Dispute::DECISION_FAVOR_SELLER) {
+                $transaction->escrowPayment->releaseToSeller("Penyelesaian mediasi sengketa admin: memenangkan penjual. Catatan: {$validated['admin_notes']}");
+            }
+        }
 
         return redirect()
             ->route('admin.disputes.show', $dispute)

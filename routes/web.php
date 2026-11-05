@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DisputeController as AdminDisputeController;
+use App\Http\Controllers\Admin\EscrowController as AdminEscrowController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConversationController;
@@ -109,6 +110,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
         Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
         Route::post('/transactions/{transaction}/payment-proof', [TransactionController::class, 'uploadProof'])->name('transactions.proof');
+        Route::post('/transactions/{transaction}/release-escrow', [TransactionController::class, 'releaseEscrow'])->name('transactions.release-escrow');
         Route::post('/transactions/{transaction}/ship', [TransactionController::class, 'ship'])->name('transactions.ship');
         Route::post('/transactions/{transaction}/delivered', [TransactionController::class, 'markDelivered'])->name('transactions.delivered');
         Route::post('/transactions/{transaction}/confirm', [TransactionController::class, 'confirm'])->name('transactions.confirm');
@@ -121,6 +123,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/disputes', [AdminDisputeController::class, 'index'])->name('disputes.index');
             Route::get('/disputes/{dispute}', [AdminDisputeController::class, 'show'])->name('disputes.show');
             Route::put('/disputes/{dispute}', [AdminDisputeController::class, 'update'])->name('disputes.update');
+            Route::get('/escrows', [AdminEscrowController::class, 'index'])->name('escrows.index');
+            Route::post('/escrows/{escrow}/verify', [AdminEscrowController::class, 'verify'])->name('escrows.verify');
+            Route::post('/escrows/{escrow}/release', [AdminEscrowController::class, 'release'])->name('escrows.release');
+            Route::post('/escrows/{escrow}/refund', [AdminEscrowController::class, 'refund'])->name('escrows.refund');
         });
     });
 });

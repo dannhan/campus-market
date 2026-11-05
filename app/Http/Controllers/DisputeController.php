@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDisputeRequest;
 use App\Models\Dispute;
+use App\Models\EscrowPayment;
 use App\Models\Offer;
 use App\Models\Product;
+use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -80,9 +82,10 @@ class DisputeController extends Controller
                 abort(403, 'Anda tidak memiliki hak untuk mengajukan komplain pada transaksi ini.');
             }
         } elseif ($product->user_id !== $user->id) {
-            // If reporting without specific offer_id, check if user has any offer on this product
+            // If reporting without specific offer_id, check if user has any offer or transaction on this product
             $userOffer = Offer::where('product_id', $product->id)->where('user_id', $user->id)->latest()->first();
-            if (! $userOffer) {
+            $userTrx = Transaction::where('product_id', $product->id)->where('buyer_id', $user->id)->latest()->first();
+            if (! $userOffer && ! $userTrx) {
                 abort(403, 'Anda tidak memiliki riwayat transaksi atau penawaran pada produk ini.');
             }
             $offer = $userOffer;
@@ -94,7 +97,11 @@ class DisputeController extends Controller
             if ($offer) {
                 $respondentId = $offer->user_id;
             } else {
-                return back()->withInput()->withErrors(['product_id' => 'Pelaporan oleh penjual memerlukan data tawaran transaksi pembeli terkait.']);
+                $trx = Transaction::where('product_id', $product->id)->latest()->first();
+                $respondentId = $trx?->buyer_id;
+                if (! $respondentId) {
+                    return back()->withInput()->withErrors(['product_id' => 'Pelaporan oleh penjual memerlukan data tawaran transaksi pembeli terkait.']);
+                }
             }
         } else {
             // Buyer is reporting seller
@@ -113,9 +120,14 @@ class DisputeController extends Controller
             'status' => Dispute::STATUS_OPEN,
         ]);
 
+        $transaction = Transaction::where('product_id', $product->id)->latest()->first();
+        if ($transaction?->escrowPayment && $transaction->escrowPayment->status === EscrowPayment::STATUS_HELD) {
+            $transaction->escrowPayment->markDisputed();
+        }
+
         return redirect()
             ->route('disputes.show', $dispute)
-            ->with('status', 'Laporan kendala transaksi berhasil diajukan dan sedang menunggu mediasi admin.');
+            ->with('status', 'Laporan kendala transaksi berhasil diajukan dan dana rekber telah dibekukan sementara menunggu mediasi admin.');
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -146,6 +147,7 @@ class Transaction extends Model
         'meeting_location',
         'payment_proof',
         'payment_details',
+        'use_escrow',
         'buyer_notes',
         'seller_notes',
         'paid_at',
@@ -161,6 +163,7 @@ class Transaction extends Model
             'amount' => 'decimal:2',
             'shipping_cost' => 'decimal:2',
             'total_amount' => 'decimal:2',
+            'use_escrow' => 'boolean',
             'payment_details' => 'array',
             'paid_at' => 'datetime',
             'shipped_at' => 'datetime',
@@ -205,6 +208,19 @@ class Transaction extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function escrowPayment(): HasOne
+    {
+        return $this->hasOne(EscrowPayment::class);
+    }
+
+    public function isEscrowProtected(): bool
+    {
+        return $this->use_escrow && in_array($this->payment_method, [
+            self::PAYMENT_METHOD_BANK_TRANSFER,
+            self::PAYMENT_METHOD_EWALLET,
+        ], true);
     }
 
     public function getFormattedAmountAttribute(): string

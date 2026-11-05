@@ -280,14 +280,22 @@
         @else
             <!-- Bank Transfer / E-Wallet Destination Account -->
             @php
+                $escrow = $transaction->escrowPayment;
                 $details = $transaction->payment_details ?? [];
-                $accNumber = $transaction->payment_method === 'bank_transfer'
-                    ? ($details['bank_account_number'] ?? $transaction->seller->bank_account_number ?? '-')
-                    : ($details['ewallet_account_number'] ?? $transaction->seller->ewallet_account_number ?? '-');
-                $accName = $transaction->payment_method === 'bank_transfer'
-                    ? ($details['bank_account_name'] ?? $transaction->seller->bank_account_name ?? $transaction->seller->name)
-                    : ($details['ewallet_account_name'] ?? $transaction->seller->ewallet_account_name ?? $transaction->seller->name);
-                $channelName = $transaction->payment_channel_label;
+
+                if ($escrow) {
+                    $accNumber = $escrow->holding_account_number;
+                    $accName = $escrow->holding_account_name;
+                    $channelName = strtoupper($escrow->holding_channel).' (Rekber Resmi CampusMarket)';
+                } else {
+                    $accNumber = $transaction->payment_method === 'bank_transfer'
+                        ? ($details['bank_account_number'] ?? $transaction->seller->bank_account_number ?? '-')
+                        : ($details['ewallet_account_number'] ?? $transaction->seller->ewallet_account_number ?? '-');
+                    $accName = $transaction->payment_method === 'bank_transfer'
+                        ? ($details['bank_account_name'] ?? $transaction->seller->bank_account_name ?? $transaction->seller->name)
+                        : ($details['ewallet_account_name'] ?? $transaction->seller->ewallet_account_name ?? $transaction->seller->name);
+                    $channelName = $transaction->payment_channel_label;
+                }
             @endphp
 
             <div class="bg-white border-2 border-teal-500/40 rounded-2xl p-4 shadow-sm space-y-3">
@@ -305,12 +313,39 @@
                     </span>
                 </div>
 
+                @if ($escrow)
+                    <!-- Rekber Escrow Status Card -->
+                    <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-blue-900 uppercase flex items-center gap-1">
+                                <span>🛡️ Proteksi Rekber CampusMarket</span>
+                            </span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $escrow->status_badge_class }}">
+                                {{ $escrow->status_label }}
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-blue-950 leading-relaxed">
+                            @if ($escrow->status === \App\Models\EscrowPayment::STATUS_PENDING_DEPOSIT)
+                                Silakan transfer dana ke rekening penampung resmi CampusMarket di bawah ini. Dana Anda akan diamankan di sistem sebelum penjual mengirimkan barang.
+                            @elseif ($escrow->status === \App\Models\EscrowPayment::STATUS_HELD)
+                                Dana sebesar <strong class="font-mono text-teal-800">{{ $escrow->formatted_total_amount }}</strong> telah diamankan di Rekber CampusMarket. Dana baru akan diteruskan ke penjual setelah pembeli menerima barang dan mengonfirmasi.
+                            @elseif ($escrow->status === \App\Models\EscrowPayment::STATUS_RELEASED)
+                                Dana rekber telah resmi dicairkan ke rekening penjual pada {{ $escrow->released_at?->translatedFormat('d M Y, H:i') }} WIB.
+                            @elseif ($escrow->status === \App\Models\EscrowPayment::STATUS_REFUNDED)
+                                Dana rekber telah dikembalikan kepada pembeli pada {{ $escrow->refunded_at?->translatedFormat('d M Y, H:i') }} WIB.
+                            @elseif ($escrow->status === \App\Models\EscrowPayment::STATUS_DISPUTED)
+                                Dana rekber sedang dibekukan sementara karena adanya sengketa transaksi yang sedang dimediasi admin.
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Account Box -->
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                     <div class="flex items-center justify-between">
                         <div>
                             <span class="text-[10px] font-semibold text-slate-400 block uppercase">
-                                {{ $transaction->payment_method === 'bank_transfer' ? 'Nomor Rekening' : 'Nomor Akun / HP E-Wallet' }}
+                                {{ $escrow ? 'Rekening Penampung Resmi Rekber' : ($transaction->payment_method === 'bank_transfer' ? 'Nomor Rekening' : 'Nomor Akun / HP E-Wallet') }}
                             </span>
                             <span class="text-base font-extrabold font-mono text-slate-900 tracking-wider">
                                 {{ $accNumber }}
@@ -457,7 +492,22 @@
 
         <!-- Action Buttons -->
         <div class="space-y-2 pt-2">
-            <!-- 1. Seller Confirm Button -->
+            <!-- 1. Buyer Release Escrow Button -->
+            @if ($isBuyer && $escrow && $escrow->status === \App\Models\EscrowPayment::STATUS_HELD)
+                <form method="POST" action="{{ route('transactions.release-escrow', $transaction) }}">
+                    @csrf
+                    <button
+                        type="submit"
+                        onclick="return confirm('Apakah Anda telah menerima barang dengan baik dan menyetujui pencairan dana rekber ke rekening penjual?')"
+                        class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <span>Konfirmasi Barang Sesuai & Lepas Dana ke Penjual</span>
+                    </button>
+                </form>
+            @endif
+
+            <!-- 2. Seller Confirm Button -->
             @if ($isSeller && $transaction->status !== 'completed' && $transaction->status !== 'cancelled')
                 <form method="POST" action="{{ route('transactions.confirm', $transaction) }}">
                     @csrf

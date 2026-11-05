@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CheckoutTransactionRequest;
 use App\Http\Requests\ShipTransactionRequest;
 use App\Http\Requests\UploadPaymentProofRequest;
+use App\Models\EscrowPayment;
 use App\Models\Offer;
 use App\Models\Product;
 use App\Models\Transaction;
@@ -103,6 +104,7 @@ class TransactionController extends Controller
             'deliveryMethods' => Transaction::DELIVERY_METHODS,
             'couriers' => Transaction::COURIERS,
             'courierFee' => (float) ($product->courier_fee ?? 10000),
+            'holdingAccounts' => EscrowPayment::HOLDING_ACCOUNTS,
         ]);
     }
 
@@ -137,6 +139,7 @@ class TransactionController extends Controller
         $paymentMethod = $request->validated('payment_method');
         $paymentChannel = $request->validated('payment_channel');
         $deliveryMethod = $request->validated('delivery_method');
+        $useEscrow = $paymentMethod !== Transaction::PAYMENT_METHOD_COD && $request->boolean('use_escrow', true);
 
         $shippingCost = $deliveryMethod === Transaction::DELIVERY_METHOD_COURIER
             ? (float) ($product->courier_fee ?? 10000.00)
@@ -168,7 +171,7 @@ class TransactionController extends Controller
             ? Transaction::STATUS_PROCESSING
             : Transaction::STATUS_PENDING;
 
-        $transaction = DB::transaction(function () use ($product, $offer, $user, $seller, $price, $paymentMethod, $paymentChannel, $deliveryMethod, $shippingCost, $totalAmount, $pickupLocation, $request, $paymentDetails, $status) {
+        $transaction = DB::transaction(function () use ($product, $offer, $user, $seller, $price, $paymentMethod, $paymentChannel, $deliveryMethod, $shippingCost, $totalAmount, $pickupLocation, $request, $paymentDetails, $status, $useEscrow) {
             $trx = Transaction::create([
                 'product_id' => $product->id,
                 'offer_id' => $offer?->id,
@@ -190,7 +193,33 @@ class TransactionController extends Controller
                 'meeting_location' => $request->validated('meeting_location'),
                 'buyer_notes' => $request->validated('buyer_notes'),
                 'payment_details' => $paymentDetails,
+                'use_escrow' => $useEscrow,
             ]);
+
+            if ($useEscrow) {
+                $holdingAccount = EscrowPayment::getHoldingAccount($paymentChannel);
+                EscrowPayment::create([
+                    'transaction_id' => $trx->id,
+                    'amount' => $price,
+                    'shipping_cost' => $shippingCost,
+                    'platform_fee' => 0.00,
+                    'total_amount' => $totalAmount,
+                    'status' => EscrowPayment::STATUS_PENDING_DEPOSIT,
+                    'holding_channel' => $paymentChannel,
+                    'holding_account_number' => $holdingAccount['account_number'],
+                    'holding_account_name' => $holdingAccount['account_name'],
+                    'seller_payout_details' => [
+                        'bank_name' => $seller->bank_name,
+                        'bank_name_label' => $seller->bank_name_label,
+                        'bank_account_number' => $seller->bank_account_number,
+                        'bank_account_name' => $seller->bank_account_name,
+                        'ewallet_provider' => $seller->ewallet_provider,
+                        'ewallet_provider_label' => $seller->ewallet_provider_label,
+                        'ewallet_account_number' => $seller->ewallet_account_number,
+                        'ewallet_account_name' => $seller->ewallet_account_name,
+                    ],
+                ]);
+            }
 
             $product->update(['status' => 'sold']);
 
@@ -199,8 +228,12 @@ class TransactionController extends Controller
 
         $message = match ($paymentMethod) {
             Transaction::PAYMENT_METHOD_COD => 'Pesanan COD berhasil dibuat. Silakan atur waktu pertemuan di kampus.',
-            Transaction::PAYMENT_METHOD_BANK_TRANSFER => 'Pesanan berhasil dibuat. Silakan selesaikan transfer bank ke rekening penjual.',
-            Transaction::PAYMENT_METHOD_EWALLET => 'Pesanan berhasil dibuat. Silakan lakukan transfer saldo e-wallet ke nomor penjual.',
+            Transaction::PAYMENT_METHOD_BANK_TRANSFER => $useEscrow
+                ? 'Pesanan berhasil dibuat dengan Proteksi Rekber Kampus. Silakan transfer ke rekening penampung resmi CampusMarket.'
+                : 'Pesanan berhasil dibuat. Silakan selesaikan transfer bank ke rekening penjual.',
+            Transaction::PAYMENT_METHOD_EWALLET => $useEscrow
+                ? 'Pesanan berhasil dibuat dengan Proteksi Rekber Kampus. Silakan transfer saldo ke akun e-wallet resmi CampusMarket.'
+                : 'Pesanan berhasil dibuat. Silakan lakukan transfer saldo e-wallet ke nomor penjual.',
             default => 'Pesanan berhasil dibuat.',
         };
 
@@ -224,6 +257,7 @@ class TransactionController extends Controller
             'buyer.student.university',
             'seller.student.university',
             'offer',
+            'escrowPayment.verifier',
         ]);
 
         return view('transactions.show', [
@@ -262,6 +296,15 @@ class TransactionController extends Controller
                 'paid_at' => now(),
                 'buyer_notes' => $request->validated('buyer_notes') ?? $transaction->buyer_notes,
             ]);
+
+            if ($transaction->escrowPayment) {
+                $transaction->escrowPayment->update([
+                    'deposit_proof' => $path,
+                    'deposited_at' => now(),
+                    'status' => EscrowPayment::STATUS_HELD,
+                    'verified_at' => now(),
+                ]);
+            }
         }
 
         return back()->with('status', 'Bukti pembayaran berhasil diunggah. Menunggu konfirmasi penerimaan dari penjual.');
@@ -337,7 +380,35 @@ class TransactionController extends Controller
             'delivered_at' => $transaction->delivered_at ?? now(),
         ]);
 
+        if ($transaction->escrowPayment && $transaction->escrowPayment->status === EscrowPayment::STATUS_HELD) {
+            $transaction->escrowPayment->releaseToSeller('Dikonfirmasi selesai oleh penjual.');
+        }
+
         return back()->with('status', 'Pembayaran berhasil diverifikasi. Transaksi jual-beli telah selesai.');
+    }
+
+    /**
+     * Buyer confirms item received and releases escrow funds to seller.
+     */
+    public function releaseEscrow(Request $request, Transaction $transaction): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($transaction->buyer_id !== $user->id && ! $user->isAdmin()) {
+            abort(403, 'Hanya pembeli yang berhak mengonfirmasi dan melepas dana rekening bersama.');
+        }
+
+        if (! $transaction->escrowPayment) {
+            return back()->with('error', 'Transaksi ini tidak menggunakan sistem proteksi rekening bersama.');
+        }
+
+        if ($transaction->escrowPayment->status !== EscrowPayment::STATUS_HELD) {
+            return back()->with('error', 'Dana rekber belum berstatus diamankan atau sudah dicairkan sebelumnya.');
+        }
+
+        $transaction->escrowPayment->releaseToSeller('Dikonfirmasi selesai dan dilepas langsung oleh pembeli.');
+
+        return back()->with('status', 'Terima kasih! Barang telah Anda konfirmasi dan dana rekber telah dicairkan ke rekening penjual.');
     }
 
     /**
@@ -361,6 +432,18 @@ class TransactionController extends Controller
                 'payment_status' => Transaction::PAYMENT_STATUS_CANCELLED,
                 'cancelled_at' => now(),
             ]);
+
+            if ($transaction->escrowPayment) {
+                if ($transaction->escrowPayment->status === EscrowPayment::STATUS_HELD) {
+                    $transaction->escrowPayment->refundToBuyer('Transaksi dibatalkan.');
+                } else {
+                    $transaction->escrowPayment->update([
+                        'status' => EscrowPayment::STATUS_REFUNDED,
+                        'refunded_at' => now(),
+                        'refund_reason' => 'Transaksi dibatalkan sebelum setoran.',
+                    ]);
+                }
+            }
 
             // Reactivate the product so it is available again in the marketplace
             $transaction->product->update(['status' => 'active']);
