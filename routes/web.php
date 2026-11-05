@@ -14,6 +14,7 @@ use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SellerBulkProductController;
 use App\Http\Controllers\SellerDashboardController;
 use App\Http\Controllers\ShippingRateController;
 use App\Http\Controllers\TransactionController;
@@ -136,6 +137,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/seller/orders', [SellerDashboardController::class, 'orders'])->name('seller.orders');
         Route::get('/seller/products', [SellerDashboardController::class, 'products'])->name('seller.products');
         Route::post('/seller/products/{product}/status', [SellerDashboardController::class, 'toggleProductStatus'])->name('seller.products.status');
+        Route::get('/seller/products/bulk', [SellerBulkProductController::class, 'create'])->name('seller.products.bulk');
+        Route::get('/seller/products/bulk/template', [SellerBulkProductController::class, 'template'])->name('seller.products.bulk.template');
+        Route::post('/seller/products/bulk', [SellerBulkProductController::class, 'store'])->name('seller.products.bulk.store');
 
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

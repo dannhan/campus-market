@@ -191,6 +191,15 @@
                     <strong class="text-sm text-slate-800 block mt-0.5 font-mono">{{ $totalProductViews }}</strong>
                 </div>
             </div>
+
+            <!-- Bulk Upload Shortcut -->
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span class="text-slate-500 text-[11px]">Punya banyak barang untuk dijual?</span>
+                <a href="{{ route('seller.products.bulk') }}" class="text-[11px] font-bold text-teal-700 hover:text-teal-800 flex items-center gap-1 hover:underline">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span>Upload Massal (CSV) &rarr;</span>
+                </a>
+            </div>
         </div>
 
         <!-- Pending Incoming Offers -->
