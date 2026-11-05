@@ -7,10 +7,12 @@ use App\Http\Requests\ShipTransactionRequest;
 use App\Http\Requests\UploadPaymentProofRequest;
 use App\Models\EscrowPayment;
 use App\Models\Offer;
+use App\Models\PointTransaction;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\University;
 use App\Notifications\TransactionStatusNotification;
+use App\Services\RewardPointService;
 use App\Services\Shipping\CampusShippingRateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -441,6 +443,30 @@ class TransactionController extends Controller
 
         if ($transaction->escrowPayment && $transaction->escrowPayment->status === EscrowPayment::STATUS_HELD) {
             $transaction->escrowPayment->releaseToSeller('Dikonfirmasi selesai oleh penjual.');
+        } else {
+            try {
+                $rewardService = app(RewardPointService::class);
+                if ($transaction->buyer) {
+                    $rewardService->awardPoints(
+                        $transaction->buyer,
+                        RewardPointService::POINTS_TRANSACTION_COMPLETED,
+                        PointTransaction::TYPE_TRANSACTION_COMPLETED,
+                        "Reward Transaksi Selesai ({$transaction->transaction_code})",
+                        $transaction
+                    );
+                }
+                if ($transaction->seller) {
+                    $rewardService->awardPoints(
+                        $transaction->seller,
+                        RewardPointService::POINTS_TRANSACTION_COMPLETED,
+                        PointTransaction::TYPE_TRANSACTION_COMPLETED,
+                        "Reward Penjualan Selesai ({$transaction->transaction_code})",
+                        $transaction
+                    );
+                }
+            } catch (\Throwable $e) {
+                // Ignore point award error
+            }
         }
 
         $transaction->buyer->notify(new TransactionStatusNotification($transaction, 'completed'));

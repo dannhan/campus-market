@@ -202,6 +202,18 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </a>
+
+                    <a href="{{ route('admin.rewards.index') }}" class="w-full py-2.5 px-3 bg-white border border-amber-300 hover:bg-amber-100/50 text-amber-900 font-bold rounded-xl text-xs flex items-center justify-between transition shadow-xs">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Kelola Reward & Poin Pengguna</span>
+                        </span>
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
                 </div>
             </div>
         @endif
@@ -360,6 +372,29 @@
                         @endif
                     </div>
                     <div class="text-[11px] text-slate-400 font-medium">Daftar transaksi COD, transfer bank & e-wallet</div>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- Student Rewards & Points -->
+        <a href="{{ route('rewards.index') }}" class="block bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-teal-500/5 border border-teal-200/90 rounded-2xl p-4 shadow-xs hover:border-teal-400 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs">
+                    ⭐
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800">Poin &amp; Reward Mahasiswa</span>
+                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs">
+                            {{ number_format($user->points_balance) }} Poin
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                        Tier: {{ $user->reward_tier['name'] }} • Tukar voucher & reward aktif
+                    </div>
                 </div>
                 <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

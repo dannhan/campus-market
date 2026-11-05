@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DisputeController as AdminDisputeController;
 use App\Http\Controllers\Admin\EscrowController as AdminEscrowController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\RewardController as AdminRewardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DisputeController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\RewardController;
 use App\Http\Controllers\SellerBulkProductController;
 use App\Http\Controllers\SellerDashboardController;
 use App\Http\Controllers\ShippingRateController;
@@ -154,6 +156,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/requests/{itemRequest}/offers', [ItemRequestController::class, 'storeOffer'])->name('requests.offers.store');
         Route::post('/requests/{itemRequest}/offers/{offer}/accept', [ItemRequestController::class, 'acceptOffer'])->name('requests.offers.accept');
 
+        // Student Rewards & Points (Poin & Reward Mahasiswa)
+        Route::get('/rewards', [RewardController::class, 'index'])->name('rewards.index');
+        Route::get('/rewards/history', [RewardController::class, 'history'])->name('rewards.history');
+        Route::post('/rewards/check-in', [RewardController::class, 'checkIn'])->name('rewards.checkin');
+        Route::post('/rewards/{rewardItem}/redeem', [RewardController::class, 'redeem'])->name('rewards.redeem');
+
         // Admin Management Panel
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::resource('categories', AdminCategoryController::class)->except(['show']);
@@ -165,6 +173,20 @@ Route::middleware('auth')->group(function () {
             Route::post('/escrows/{escrow}/verify', [AdminEscrowController::class, 'verify'])->name('escrows.verify');
             Route::post('/escrows/{escrow}/release', [AdminEscrowController::class, 'release'])->name('escrows.release');
             Route::post('/escrows/{escrow}/refund', [AdminEscrowController::class, 'refund'])->name('escrows.refund');
+
+            // Admin Rewards & Points Management
+            Route::get('/rewards', [AdminRewardController::class, 'index'])->name('rewards.index');
+            Route::get('/rewards/create', [AdminRewardController::class, 'create'])->name('rewards.create');
+            Route::post('/rewards', [AdminRewardController::class, 'store'])->name('rewards.store');
+            Route::get('/rewards/{rewardItem}/edit', [AdminRewardController::class, 'edit'])->name('rewards.edit');
+            Route::put('/rewards/{rewardItem}', [AdminRewardController::class, 'update'])->name('rewards.update');
+            Route::delete('/rewards/{rewardItem}', [AdminRewardController::class, 'destroy'])->name('rewards.destroy');
+            Route::post('/rewards/{rewardItem}/toggle', [AdminRewardController::class, 'toggleStatus'])->name('rewards.toggle');
+            Route::get('/rewards/users', [AdminRewardController::class, 'users'])->name('rewards.users');
+            Route::post('/rewards/users/{user}/adjust', [AdminRewardController::class, 'adjustPoints'])->name('rewards.adjust');
+            Route::get('/rewards/redemptions', [AdminRewardController::class, 'redemptions'])->name('rewards.redemptions');
+            Route::post('/rewards/redemptions/{redemption}/fulfill', [AdminRewardController::class, 'markRedemptionFulfilled'])->name('rewards.redemptions.fulfill');
+            Route::get('/rewards/history', [AdminRewardController::class, 'history'])->name('rewards.history');
         });
     });
 });

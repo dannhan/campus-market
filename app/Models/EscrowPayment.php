@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\RewardPointService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -239,6 +240,30 @@ class EscrowPayment extends Model
             'confirmed_at' => now(),
             'delivered_at' => $this->transaction->delivered_at ?? now(),
         ]);
+
+        try {
+            $rewardService = app(RewardPointService::class);
+            if ($this->transaction->buyer) {
+                $rewardService->awardPoints(
+                    $this->transaction->buyer,
+                    RewardPointService::POINTS_TRANSACTION_COMPLETED,
+                    PointTransaction::TYPE_TRANSACTION_COMPLETED,
+                    "Reward Transaksi Selesai ({$this->transaction->transaction_code})",
+                    $this->transaction
+                );
+            }
+            if ($this->transaction->seller) {
+                $rewardService->awardPoints(
+                    $this->transaction->seller,
+                    RewardPointService::POINTS_TRANSACTION_COMPLETED,
+                    PointTransaction::TYPE_TRANSACTION_COMPLETED,
+                    "Reward Penjualan Selesai ({$this->transaction->transaction_code})",
+                    $this->transaction
+                );
+            }
+        } catch (\Throwable $e) {
+            // Ignore point award error to avoid blocking transaction flow
+        }
     }
 
     /**
