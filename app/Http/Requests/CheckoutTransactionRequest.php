@@ -41,6 +41,8 @@ class CheckoutTransactionRequest extends FormRequest
             'payment_method' => ['required', 'string', Rule::in(array_keys(Transaction::PAYMENT_METHODS))],
             'payment_channel' => ['required', 'string', Rule::in(array_keys(Transaction::PAYMENT_CHANNELS))],
             'delivery_method' => ['required', 'string', Rule::in(array_keys(Transaction::DELIVERY_METHODS))],
+            'origin_university_id' => ['nullable', 'integer', 'exists:universities,id'],
+            'destination_university_id' => ['nullable', 'integer', 'exists:universities,id'],
             'use_escrow' => ['nullable', 'boolean'],
             'meeting_location' => [
                 'nullable',

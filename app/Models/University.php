@@ -15,7 +15,20 @@ class University extends Model
         'name',
         'slug',
         'email_domain',
+        'city',
+        'province',
+        'latitude',
+        'longitude',
+        'address',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'latitude' => 'float',
+            'longitude' => 'float',
+        ];
+    }
 
     /**
      * Get the student registry entries for this university.
@@ -49,5 +62,40 @@ class University extends Model
         $emailDomain = end($emailParts);
 
         return $emailDomain === $domain;
+    }
+
+    /**
+     * Get coordinate pair if available.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    public function getCoordinates(): ?array
+    {
+        if ($this->latitude === null || $this->longitude === null) {
+            return null;
+        }
+
+        return [
+            'lat' => (float) $this->latitude,
+            'lng' => (float) $this->longitude,
+        ];
+    }
+
+    /**
+     * Determine whether the university has geo coordinates.
+     */
+    public function hasCoordinates(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
+    /**
+     * Get formatted city and province string.
+     */
+    public function getFormattedLocationAttribute(): string
+    {
+        $parts = array_filter([$this->city, $this->province]);
+
+        return empty($parts) ? 'Indonesia' : implode(', ', $parts);
     }
 }

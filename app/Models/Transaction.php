@@ -132,6 +132,10 @@ class Transaction extends Model
         'seller_id',
         'amount',
         'delivery_method',
+        'origin_university_id',
+        'destination_university_id',
+        'distance_km',
+        'estimated_delivery_days',
         'shipping_cost',
         'total_amount',
         'pickup_location',
@@ -162,6 +166,7 @@ class Transaction extends Model
         return [
             'amount' => 'decimal:2',
             'shipping_cost' => 'decimal:2',
+            'distance_km' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'use_escrow' => 'boolean',
             'payment_details' => 'array',
@@ -210,6 +215,16 @@ class Transaction extends Model
         return $this->belongsTo(User::class, 'seller_id');
     }
 
+    public function originUniversity(): BelongsTo
+    {
+        return $this->belongsTo(University::class, 'origin_university_id');
+    }
+
+    public function destinationUniversity(): BelongsTo
+    {
+        return $this->belongsTo(University::class, 'destination_university_id');
+    }
+
     public function escrowPayment(): HasOne
     {
         return $this->hasOne(EscrowPayment::class);
@@ -246,6 +261,22 @@ class Transaction extends Model
     public function getCourierNameLabelAttribute(): string
     {
         return self::COURIERS[$this->courier_name] ?? strtoupper($this->courier_name ?? '-');
+    }
+
+    public function getShippingRouteLabelAttribute(): string
+    {
+        if (! $this->originUniversity && ! $this->destinationUniversity) {
+            return 'Pengiriman Standar';
+        }
+
+        $origin = $this->originUniversity?->name ?? 'Kampus Penjual';
+        $dest = $this->destinationUniversity?->name ?? 'Kampus Pembeli';
+
+        if ($this->origin_university_id && $this->destination_university_id && $this->origin_university_id === $this->destination_university_id) {
+            return "Satu Kampus ({$origin})";
+        }
+
+        return "{$origin} → {$dest}";
     }
 
     public function getPaymentMethodLabelAttribute(): string

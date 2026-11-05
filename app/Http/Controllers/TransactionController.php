@@ -9,6 +9,8 @@ use App\Models\EscrowPayment;
 use App\Models\Offer;
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Models\University;
+use App\Services\Shipping\CampusShippingRateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,18 +94,29 @@ class TransactionController extends Controller
         }
 
         $seller = $product->user->load('student.university');
+        $universities = University::orderBy('name')->get();
+        $originUniversity = $seller->student?->university ?? University::where('slug', 'undip')->first() ?? $universities->first();
+        $buyerUniversity = $user->student?->university ?? $originUniversity;
+
+        $initialRateData = ($originUniversity && $buyerUniversity)
+            ? app(CampusShippingRateService::class)->calculateRate($originUniversity, $buyerUniversity, 'jnt')
+            : null;
 
         return view('transactions.checkout', [
             'product' => $product,
             'offer' => $offer,
             'price' => $price,
             'seller' => $seller,
+            'universities' => $universities,
+            'originUniversity' => $originUniversity,
+            'buyerUniversity' => $buyerUniversity,
+            'initialRateData' => $initialRateData,
             'paymentMethods' => Transaction::PAYMENT_METHODS,
             'bankChannels' => Transaction::BANK_CHANNELS,
             'ewalletChannels' => Transaction::EWALLET_CHANNELS,
             'deliveryMethods' => Transaction::DELIVERY_METHODS,
             'couriers' => Transaction::COURIERS,
-            'courierFee' => (float) ($product->courier_fee ?? 10000),
+            'courierFee' => (float) ($initialRateData['cost'] ?? ($product->courier_fee ?? 10000)),
             'holdingAccounts' => EscrowPayment::HOLDING_ACCOUNTS,
         ]);
     }
@@ -114,7 +127,7 @@ class TransactionController extends Controller
     public function store(CheckoutTransactionRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $product = Product::with('user')->findOrFail($request->validated('product_id'));
+        $product = Product::with('user.student.university')->findOrFail($request->validated('product_id'));
 
         if ($product->user_id === $user->id) {
             abort(403, 'Anda tidak dapat membeli produk milik Anda sendiri.');
@@ -141,9 +154,38 @@ class TransactionController extends Controller
         $deliveryMethod = $request->validated('delivery_method');
         $useEscrow = $paymentMethod !== Transaction::PAYMENT_METHOD_COD && $request->boolean('use_escrow', true);
 
-        $shippingCost = $deliveryMethod === Transaction::DELIVERY_METHOD_COURIER
-            ? (float) ($product->courier_fee ?? 10000.00)
-            : 0.00;
+        // Resolve origin & destination campus for shipping calculation
+        $destinationUniversityId = $request->validated('destination_university_id');
+        $originUniversityId = $request->validated('origin_university_id');
+
+        if ($destinationUniversityId && ! $originUniversityId) {
+            $originUniversityId = $seller->student?->university_id ?: University::first()?->id;
+        }
+
+        $originUniversity = $originUniversityId ? University::find($originUniversityId) : null;
+        $destinationUniversity = $destinationUniversityId ? University::find($destinationUniversityId) : null;
+
+        $shippingCost = 0.00;
+        $distanceKm = null;
+        $estimatedDeliveryDays = null;
+        $courierName = $request->validated('courier_name');
+
+        if ($deliveryMethod === Transaction::DELIVERY_METHOD_COURIER) {
+            if ($originUniversity && $destinationUniversity) {
+                $rateData = app(CampusShippingRateService::class)->calculateRate(
+                    $originUniversity,
+                    $destinationUniversity,
+                    $courierName
+                );
+                $shippingCost = (float) $rateData['cost'];
+                $distanceKm = $rateData['distance_km'];
+                $estimatedDeliveryDays = $rateData['etd'];
+                $courierName = $rateData['selected_courier'];
+            } else {
+                $shippingCost = (float) ($product->courier_fee ?? 10000.00);
+            }
+        }
+
         $totalAmount = $price + $shippingCost;
 
         $pickupLocation = null;
@@ -171,7 +213,7 @@ class TransactionController extends Controller
             ? Transaction::STATUS_PROCESSING
             : Transaction::STATUS_PENDING;
 
-        $transaction = DB::transaction(function () use ($product, $offer, $user, $seller, $price, $paymentMethod, $paymentChannel, $deliveryMethod, $shippingCost, $totalAmount, $pickupLocation, $request, $paymentDetails, $status, $useEscrow) {
+        $transaction = DB::transaction(function () use ($product, $offer, $user, $seller, $price, $paymentMethod, $paymentChannel, $deliveryMethod, $originUniversityId, $destinationUniversityId, $distanceKm, $estimatedDeliveryDays, $shippingCost, $totalAmount, $pickupLocation, $request, $courierName, $paymentDetails, $status, $useEscrow) {
             $trx = Transaction::create([
                 'product_id' => $product->id,
                 'offer_id' => $offer?->id,
@@ -179,13 +221,17 @@ class TransactionController extends Controller
                 'seller_id' => $seller->id,
                 'amount' => $price,
                 'delivery_method' => $deliveryMethod,
+                'origin_university_id' => $originUniversityId,
+                'destination_university_id' => $destinationUniversityId,
+                'distance_km' => $distanceKm,
+                'estimated_delivery_days' => $estimatedDeliveryDays,
                 'shipping_cost' => $shippingCost,
                 'total_amount' => $totalAmount,
                 'pickup_location' => $pickupLocation,
                 'shipping_recipient_name' => $request->validated('shipping_recipient_name'),
                 'shipping_phone' => $request->validated('shipping_phone'),
                 'shipping_address' => $request->validated('shipping_address'),
-                'courier_name' => $request->validated('courier_name'),
+                'courier_name' => $courierName,
                 'payment_method' => $paymentMethod,
                 'payment_channel' => $paymentChannel,
                 'payment_status' => Transaction::PAYMENT_STATUS_PENDING,
@@ -256,6 +302,8 @@ class TransactionController extends Controller
             'product.category',
             'buyer.student.university',
             'seller.student.university',
+            'originUniversity',
+            'destinationUniversity',
             'offer',
             'escrowPayment.verifier',
         ]);

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\University;
+use App\Services\Shipping\CampusShippingRateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -102,12 +103,23 @@ class ProductController extends Controller
                 ->first();
         }
 
+        $universities = University::orderBy('name')->get();
+        $sellerUniversity = $product->user->student?->university ?? University::where('slug', 'undip')->first() ?? $universities->first();
+        $userUniversity = $request->user()?->student?->university ?? $sellerUniversity;
+        $initialShippingEstimate = ($sellerUniversity && $userUniversity)
+            ? app(CampusShippingRateService::class)->calculateRate($sellerUniversity, $userUniversity, 'jnt')
+            : null;
+
         return view('products.show', [
             'product' => $product,
             'seller' => $product->user,
             'isOwner' => $isOwner,
             'myPendingOffer' => $myPendingOffer,
             'pendingOffersCount' => $product->offers()->where('status', 'pending')->count(),
+            'universities' => $universities,
+            'sellerUniversity' => $sellerUniversity,
+            'userUniversity' => $userUniversity,
+            'initialShippingEstimate' => $initialShippingEstimate,
         ]);
     }
 

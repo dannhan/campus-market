@@ -5,9 +5,54 @@
     method: '{{ old('payment_method', 'cod') }}',
     channel: '{{ old('payment_channel', 'cod') }}',
     deliveryMethod: '{{ old('delivery_method', 'cod') }}',
-    courierName: '{{ old('courier_name', 'jnt') }}',
+    courierName: '{{ old('courier_name', $initialRateData['selected_courier'] ?? 'jnt') }}',
+    originUniversityId: {{ $originUniversity?->id ?? 'null' }},
+    destinationUniversityId: {{ old('destination_university_id', $buyerUniversity?->id ?? $originUniversity?->id ?? 'null') }},
+    rates: {{ json_encode($initialRateData['rates'] ?? []) }},
+    distanceLabel: '{{ $initialRateData['distance_label'] ?? '' }}',
+    zoneLabel: '{{ $initialRateData['zone_label'] ?? '' }}',
+    zoneBadge: '{{ $initialRateData['zone_badge'] ?? '' }}',
+    zoneDesc: '{{ $initialRateData['zone_description'] ?? '' }}',
+    etd: '{{ $initialRateData['etd'] ?? '' }}',
     itemPrice: {{ (float) $price }},
-    courierFee: {{ (float) $courierFee }},
+    courierFee: {{ (float) ($initialRateData['cost'] ?? $courierFee) }},
+    isLoadingRates: false,
+    async fetchRates(destId) {
+        if (!destId || !this.originUniversityId) return;
+        this.isLoadingRates = true;
+        try {
+            const url = `{{ route('shipping.estimate') }}?origin_university_id=${this.originUniversityId}&destination_university_id=${destId}&courier=${this.courierName}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.success && data.data) {
+                this.rates = data.data.rates;
+                this.distanceLabel = data.data.distance_label;
+                this.zoneLabel = data.data.zone_label;
+                this.zoneBadge = data.data.zone_badge;
+                this.zoneDesc = data.data.zone_description;
+                this.etd = data.data.etd;
+
+                if (this.rates[this.courierName] && this.rates[this.courierName].available) {
+                    this.courierFee = this.rates[this.courierName].cost;
+                } else {
+                    this.courierName = data.data.selected_courier;
+                    this.courierFee = data.data.cost;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to estimate shipping:', e);
+        } finally {
+            this.isLoadingRates = false;
+        }
+    },
+    selectCourier(ckey) {
+        if (this.rates[ckey] && !this.rates[ckey].available) return;
+        this.courierName = ckey;
+        if (this.rates[ckey]) {
+            this.courierFee = this.rates[ckey].cost;
+            this.etd = this.rates[ckey].etd;
+        }
+    },
     setMethod(m, c) {
         this.method = m;
         this.channel = c;
@@ -45,6 +90,8 @@
         <input type="hidden" name="payment_method" :value="method">
         <input type="hidden" name="payment_channel" :value="channel">
         <input type="hidden" name="delivery_method" :value="deliveryMethod">
+        <input type="hidden" name="origin_university_id" :value="originUniversityId">
+        <input type="hidden" name="destination_university_id" :value="destinationUniversityId">
         <input type="hidden" name="use_escrow" :value="method !== 'cod' ? '1' : '0'">
 
         <!-- Product Summary Card -->
@@ -202,12 +249,12 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold text-slate-900">Pengiriman Kurir Ekspedisi</span>
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" x-text="'+ ' + formatRupiah(courierFee)">
                                     + Rp {{ number_format($courierFee, 0, ',', '.') }}
                                 </span>
                             </div>
                             <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                                Pesanan dikirim langsung ke kos, asrama, atau alamat tempat tinggal Anda melalui layanan ekspedisi atau kurir mahasiswa.
+                                Ongkos kirim dihitung riil otomatis berdasarkan jarak lokasi kampus penjual ke kampus / alamat Anda.
                             </p>
                         </div>
                     </div>
@@ -217,9 +264,58 @@
                     </div>
                 </div>
 
-                <!-- Courier Address & Service Inputs -->
+                <!-- Courier Address, Campus Location & Service Inputs -->
                 <div x-show="deliveryMethod === 'courier'" x-cloak class="mt-3 pt-3 border-t border-teal-200/60 space-y-3">
-                    <!-- Courier Selection -->
+                    <!-- Origin Campus Info -->
+                    <div class="p-2.5 bg-blue-50/70 border border-blue-200/80 rounded-xl space-y-0.5">
+                        <span class="text-[10px] font-bold text-blue-800 uppercase block">Lokasi Asal Kampus Penjual:</span>
+                        <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            <span>{{ $originUniversity?->name ?? 'Kampus Penjual' }}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500">{{ $originUniversity?->formatted_location }}</p>
+                    </div>
+
+                    <!-- Destination Campus Selector -->
+                    <div>
+                        <label for="destination_university_id" class="block text-[11px] font-semibold text-slate-700 mb-1">
+                            Pilih Kampus / Wilayah Tujuan Pengiriman <span class="text-rose-500">*</span>
+                        </label>
+                        <select
+                            id="destination_university_id"
+                            x-model="destinationUniversityId"
+                            @change="fetchRates(destinationUniversityId)"
+                            class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition"
+                        >
+                            @foreach ($universities as $univ)
+                                <option value="{{ $univ->id }}" @selected($univ->id === ($buyerUniversity?->id ?? $originUniversity?->id))>
+                                    {{ $univ->name }} — {{ $univ->formatted_location }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('destination_university_id')
+                            <p class="text-[11px] text-rose-500 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Live Distance & Zone Indicator -->
+                    <div class="p-2.5 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between text-xs">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-1.5 font-bold text-slate-800">
+                                <span x-show="!isLoadingRates" class="text-xs">
+                                    📍 Jarak Antar-Kampus: <span x-text="distanceLabel" class="text-teal-700 font-mono"></span>
+                                </span>
+                                <span x-show="isLoadingRates" class="text-xs text-slate-500 flex items-center gap-1">
+                                    <svg class="animate-spin h-3.5 w-3.5 text-teal-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Menghitung tarif riil lokasi...
+                                </span>
+                            </div>
+                            <p class="text-[10px] text-slate-500" x-text="zoneDesc"></p>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 shrink-0" x-text="zoneBadge"></span>
+                    </div>
+
+                    <!-- Courier Selection with Real-Time Rates -->
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                             Pilih Kurir Ekspedisi <span class="text-rose-500">*</span>
@@ -229,12 +325,20 @@
                             @foreach ($couriers as $ckey => $cname)
                                 <button
                                     type="button"
-                                    @click.stop="courierName = '{{ $ckey }}'"
-                                    :class="courierName === '{{ $ckey }}' ? 'border-teal-600 bg-white text-teal-800 font-bold shadow-xs' : 'border-slate-200 bg-white/70 text-slate-600 hover:bg-white'"
-                                    class="p-2 border rounded-xl text-left text-xs transition flex items-center justify-between"
+                                    @click.stop="selectCourier('{{ $ckey }}')"
+                                    :disabled="rates['{{ $ckey }}'] && !rates['{{ $ckey }}'].available"
+                                    :class="courierName === '{{ $ckey }}' ? 'border-teal-600 bg-white text-teal-800 font-bold shadow-xs ring-1 ring-teal-600/30' : (rates['{{ $ckey }}'] && !rates['{{ $ckey }}'].available ? 'border-slate-100 bg-slate-50/70 text-slate-400 cursor-not-allowed opacity-60' : 'border-slate-200 bg-white/70 text-slate-700 hover:bg-white')"
+                                    class="p-2.5 border rounded-xl text-left text-xs transition flex flex-col justify-between"
                                 >
-                                    <span>{{ $cname }}</span>
-                                    <span x-show="courierName === '{{ $ckey }}'" class="text-teal-600 text-xs font-bold">✓</span>
+                                    <div class="flex items-center justify-between w-full">
+                                        <span class="font-bold text-[11px] truncate">{{ $cname }}</span>
+                                        <span x-show="courierName === '{{ $ckey }}'" class="text-teal-600 text-xs font-bold">✓</span>
+                                    </div>
+                                    <div class="mt-1 flex items-center justify-between text-[10px]">
+                                        <span class="font-mono font-extrabold" :class="courierName === '{{ $ckey }}' ? 'text-teal-700' : 'text-slate-600'" x-text="rates['{{ $ckey }}'] ? rates['{{ $ckey }}'].formatted_cost : '-'"></span>
+                                        <span class="text-[9px] text-slate-400" x-text="rates['{{ $ckey }}'] ? rates['{{ $ckey }}'].etd : ''"></span>
+                                    </div>
+                                    <span x-show="rates['{{ $ckey }}'] && !rates['{{ $ckey }}'].available" class="text-[8px] text-rose-500 block mt-0.5" x-text="rates['{{ $ckey }}']?.unavailable_reason"></span>
                                 </button>
                             @endforeach
                         </div>
