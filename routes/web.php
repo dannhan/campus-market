@@ -171,6 +171,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::resource('categories', AdminCategoryController::class)->except(['show']);
             Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/export', [AdminReportController::class, 'export'])->name('reports.export');
             Route::get('/disputes', [AdminDisputeController::class, 'index'])->name('disputes.index');
             Route::get('/disputes/{dispute}', [AdminDisputeController::class, 'show'])->name('disputes.show');
             Route::put('/disputes/{dispute}', [AdminDisputeController::class, 'update'])->name('disputes.update');

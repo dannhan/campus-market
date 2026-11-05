@@ -8,11 +8,14 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Offer;
 use App\Models\Product;
+use App\Models\Transaction;
 use App\Models\University;
 use App\Models\User;
 use App\Models\Wishlist;
+use App\Services\Report\TransactionExportService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class ReportController extends Controller
 {
@@ -43,10 +46,15 @@ class ReportController extends Controller
         $pendingOffersCount = Offer::where('status', 'pending')->count();
         $rejectedOffersCount = Offer::where('status', 'rejected')->count();
 
-        // Gross Merchandise Value (GMV) estimate: sold products + accepted offers
+        // Direct checkout transactions
+        $totalTransactionsCount = Transaction::count();
+        $completedTransactionsCount = Transaction::where('status', Transaction::STATUS_COMPLETED)->count();
+        $totalTransactionAmount = (float) Transaction::where('status', Transaction::STATUS_COMPLETED)->sum('total_amount');
+
+        // Gross Merchandise Value (GMV) estimate: sold products + accepted offers + completed transactions
         $soldProductsValue = (float) Product::where('status', 'sold')->sum('price');
         $acceptedOffersValue = (float) Offer::where('status', 'accepted')->sum('offered_price');
-        $totalEstimatedGmv = $soldProductsValue + $acceptedOffersValue;
+        $totalEstimatedGmv = $soldProductsValue + $acceptedOffersValue + $totalTransactionAmount;
 
         // 4. Student Engagement & Communication
         $totalConversations = Conversation::count();
@@ -107,6 +115,9 @@ class ReportController extends Controller
             'rejectedOffersCount' => $rejectedOffersCount,
             'soldProductsValue' => $soldProductsValue,
             'acceptedOffersValue' => $acceptedOffersValue,
+            'totalTransactionsCount' => $totalTransactionsCount,
+            'completedTransactionsCount' => $completedTransactionsCount,
+            'totalTransactionAmount' => $totalTransactionAmount,
             'totalEstimatedGmv' => $totalEstimatedGmv,
 
             // Engagement
@@ -117,6 +128,44 @@ class ReportController extends Controller
             // Transaction Records & Filters
             'transactions' => $transactions,
             'currentStatus' => $statusFilter,
+        ]);
+    }
+
+    /**
+     * Export transaction reports to Excel / CSV format.
+     */
+    public function export(Request $request, TransactionExportService $exportService): Response
+    {
+        $format = strtolower((string) $request->input('format', 'xlsx'));
+        if (! in_array($format, ['xlsx', 'xls', 'csv'], true)) {
+            $format = 'xlsx';
+        }
+
+        $query = $exportService->buildQuery($request);
+        $timestamp = now()->format('Ymd_His');
+
+        if ($format === 'csv') {
+            $content = $exportService->exportCsv($query);
+            $filename = "laporan_transaksi_campusmarket_{$timestamp}.csv";
+
+            return response($content, 200, [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
+        }
+
+        $content = $exportService->exportXlsx($query);
+        $filename = "laporan_transaksi_campusmarket_{$timestamp}.xlsx";
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 }
