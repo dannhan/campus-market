@@ -86,6 +86,59 @@
             </div>
         </div>
 
+        <!-- Seller Center (Dashboard Penjual) Entry Card -->
+        @php
+            $sellerRevenue = (float) $user->sales()->where('status', \App\Models\Transaction::STATUS_COMPLETED)->sum('amount');
+            $sellerActiveProducts = $user->products()->where('status', 'active')->count();
+            $sellerActionRequired = $user->sales()->where(function ($q) {
+                $q->where('status', \App\Models\Transaction::STATUS_PROCESSING)
+                    ->orWhere(function ($sub) {
+                        $sub->where('status', \App\Models\Transaction::STATUS_PENDING)
+                            ->where('payment_status', \App\Models\Transaction::PAYMENT_STATUS_PAID);
+                    });
+            })->count();
+        @endphp
+
+        <a href="{{ route('seller.dashboard') }}" class="block bg-gradient-to-r from-teal-800 via-teal-700 to-teal-900 rounded-2xl p-4 text-white shadow-md hover:shadow-lg transition relative overflow-hidden group">
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none group-hover:scale-110 transition duration-300"></div>
+
+            <div class="flex items-start justify-between relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 border border-white/20">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-bold text-white">Seller Center</h2>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/30 text-teal-100 border border-white/20">Toko Saya</span>
+                            @if ($sellerActionRequired > 0)
+                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">
+                                    {{ $sellerActionRequired }} Perlu Diproses
+                                </span>
+                            @endif
+                        </div>
+                        <p class="text-[11px] text-teal-100 mt-0.5">Kelola pesanan masuk, pendapatan & etalase barang</p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-teal-200 group-hover:translate-x-1 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10 relative z-10 text-xs">
+                <div>
+                    <span class="text-[10px] text-teal-200 block uppercase tracking-wider font-semibold">Total Pendapatan</span>
+                    <span class="text-sm font-extrabold font-mono text-white">Rp {{ number_format($sellerRevenue, 0, ',', '.') }}</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-teal-200 block uppercase tracking-wider font-semibold">Barang Aktif</span>
+                    <span class="text-sm font-extrabold text-white">{{ $sellerActiveProducts }} Produk</span>
+                </div>
+            </div>
+        </a>
+
         @if ($user->isAdmin())
             <!-- Admin Panel Section -->
             <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4 shadow-xs">

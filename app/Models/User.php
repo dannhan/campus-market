@@ -208,6 +208,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return number_format((float) $this->seller_rating, 1).' / 5.0 ('.$this->seller_review_count.' ulasan)';
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
     public function purchases(): HasMany
     {
         return $this->hasMany(Transaction::class, 'buyer_id');
