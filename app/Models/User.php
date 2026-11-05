@@ -238,6 +238,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Review::class, 'reviewee_id')->where('type', Review::TYPE_BUYER_REVIEW);
     }
 
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->unreadNotifications()->count();
+    }
+
     /**
      * Recalculate and update the aggregated seller and buyer ratings.
      */

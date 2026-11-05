@@ -10,6 +10,7 @@ use App\Models\Offer;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\University;
+use App\Notifications\TransactionStatusNotification;
 use App\Services\Shipping\CampusShippingRateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -272,6 +273,8 @@ class TransactionController extends Controller
             return $trx;
         });
 
+        $transaction->seller->notify(new TransactionStatusNotification($transaction, 'created', "Pesanan baru #{$transaction->transaction_code} dari {$transaction->buyer->name}."));
+
         $message = match ($paymentMethod) {
             Transaction::PAYMENT_METHOD_COD => 'Pesanan COD berhasil dibuat. Silakan atur waktu pertemuan di kampus.',
             Transaction::PAYMENT_METHOD_BANK_TRANSFER => $useEscrow
@@ -354,6 +357,8 @@ class TransactionController extends Controller
                     'verified_at' => now(),
                 ]);
             }
+
+            $transaction->seller->notify(new TransactionStatusNotification($transaction, 'paid'));
         }
 
         return back()->with('status', 'Bukti pembayaran berhasil diunggah. Menunggu konfirmasi penerimaan dari penjual.');
@@ -382,6 +387,8 @@ class TransactionController extends Controller
             'status' => Transaction::STATUS_PROCESSING,
         ]);
 
+        $transaction->buyer->notify(new TransactionStatusNotification($transaction, 'shipped'));
+
         return back()->with('status', 'Informasi pengiriman dan nomor resi berhasil disimpan.');
     }
 
@@ -403,6 +410,9 @@ class TransactionController extends Controller
         $transaction->update([
             'delivered_at' => now(),
         ]);
+
+        $counterparty = ($user->id === $transaction->buyer_id) ? $transaction->seller : $transaction->buyer;
+        $counterparty->notify(new TransactionStatusNotification($transaction, 'delivered'));
 
         return back()->with('status', 'Status pesanan berhasil diperbarui: barang telah diterima.');
     }
@@ -433,6 +443,8 @@ class TransactionController extends Controller
             $transaction->escrowPayment->releaseToSeller('Dikonfirmasi selesai oleh penjual.');
         }
 
+        $transaction->buyer->notify(new TransactionStatusNotification($transaction, 'completed'));
+
         return back()->with('status', 'Pembayaran berhasil diverifikasi. Transaksi jual-beli telah selesai.');
     }
 
@@ -456,6 +468,7 @@ class TransactionController extends Controller
         }
 
         $transaction->escrowPayment->releaseToSeller('Dikonfirmasi selesai dan dilepas langsung oleh pembeli.');
+        $transaction->seller->notify(new TransactionStatusNotification($transaction, 'completed', "Dana rekening bersama untuk transaksi {$transaction->transaction_code} telah dilepas ke rekening Anda."));
 
         return back()->with('status', 'Terima kasih! Barang telah Anda konfirmasi dan dana rekber telah dicairkan ke rekening penjual.');
     }
@@ -497,6 +510,9 @@ class TransactionController extends Controller
             // Reactivate the product so it is available again in the marketplace
             $transaction->product->update(['status' => 'active']);
         });
+
+        $counterparty = ($user->id === $transaction->buyer_id) ? $transaction->seller : $transaction->buyer;
+        $counterparty->notify(new TransactionStatusNotification($transaction, 'cancelled'));
 
         return back()->with('status', 'Transaksi berhasil dibatalkan dan produk dikembalikan ke etalase.');
     }
